@@ -17,11 +17,16 @@ The Ethereum Storage Protocol provides immutable, content-addressed storage with
 - 🛡️ **Security Hardened**: Comprehensive reentrancy protection and access controls
 - 🔧 **Modular Design**: Upgradeable registry with persistent storage layer
 - 📊 **Comprehensive Testing**: 95/95 tests passing with full coverage
+- 🤖 **AI-Ready**: Includes LLM context file for AI-assisted development
 
 ## Installation
 
 ```bash
-npm install ethereum-storage-protocol
+# Public package
+npm install ethereum-storage
+
+# Organization scoped package
+npm install @tw3/esp
 ```
 
 ## Quick Start
@@ -34,7 +39,9 @@ import {
   DataPointStorage__factory,
   espDeployments,
   getContractAddress 
-} from 'ethereum-storage-protocol';
+} from 'ethereum-storage';
+// or from '@tw3/esp'
+
 import { ethers } from 'ethers';
 
 // Connect to deployed contracts
@@ -66,13 +73,13 @@ import {
   DataPointStorage__factory,
   IDataPointRegistry,
   IDataPointStorage
-} from 'ethereum-storage-protocol';
+} from 'ethereum-storage';
 
 // Contract ABIs
 import {
   DataPointRegistryABI,
   DataPointStorageABI
-} from 'ethereum-storage-protocol/contracts';
+} from 'ethereum-storage/contracts';
 
 // Deployment information
 import {
@@ -80,15 +87,26 @@ import {
   getContractAddress,
   getDeploymentInfo,
   getSupportedNetworks
-} from 'ethereum-storage-protocol/deployments';
+} from 'ethereum-storage/deployments';
 
 // TypeScript types
 import type {
   ContractTransaction,
   BigNumberish,
   Overrides
-} from 'ethereum-storage-protocol/types';
+} from 'ethereum-storage/types';
 ```
+
+## AI-Assisted Development
+
+This package includes `LLM_CONTEXT.md` - a comprehensive context file that helps AI assistants provide accurate integration guidance. This innovative feature enables:
+
+- **Better AI Help**: AI assistants understand the package structure and usage patterns
+- **Consistent Support**: Standardized integration assistance across TW3 packages  
+- **Up-to-Date Context**: AI context stays current with package updates
+- **Faster Development**: Reduced time spent explaining package details to AI tools
+
+**For AI Tools**: Look for `LLM_CONTEXT.md` in TW3 packages to provide enhanced integration support.
 
 ### Development Setup
 

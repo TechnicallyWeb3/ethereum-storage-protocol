@@ -27,6 +27,7 @@ test/
 
 # Build tools and scripts
 scripts/copy-contracts.ts
+scripts/publish-packages.ts
 
 # Original contracts (cleaned versions are in dist/contracts)
 contracts/
@@ -70,4 +71,8 @@ coverage/
 
 # Package lock files (end users should generate their own)
 package-lock.json
-yarn.lock 
+yarn.lock
+
+# Alternative package.json files
+package.tw3.json
+package.json.backup 
