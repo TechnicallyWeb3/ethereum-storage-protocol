@@ -4,6 +4,9 @@ import "hardhat-contract-sizer";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
 
+// Import custom tasks
+import "./tasks/royalty";
+
 dotenv.config();
 
 const defaultMnemonic = 'test test test test test test test test test test test junk';
