@@ -235,7 +235,7 @@ describe("DataPointStorage Contract Audit", function () {
       
       // Writing empty data should fail
       await expect(dataPointStorage.writeDataPoint(emptyData))
-        .to.be.revertedWithCustomError(dataPointStorage, "EmptyDataNotAllowed");
+        .to.be.revertedWithCustomError(dataPointStorage, "InvalidData");
     });
 
     it("CRITICAL: Version consistency between function and contract", async function () {

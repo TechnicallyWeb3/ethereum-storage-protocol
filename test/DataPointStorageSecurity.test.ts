@@ -137,7 +137,7 @@ describe("DataPointStorage Security Audit", function () {
       
       // Should reject empty data
       await expect(dataPointStorage.writeDataPoint(emptyData))
-        .to.be.revertedWithCustomError(dataPointStorage, "EmptyDataNotAllowed");
+        .to.be.revertedWithCustomError(dataPointStorage, "InvalidData");
     });
 
     it("Should handle maximum uint8 version in standalone function", async function () {

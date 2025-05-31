@@ -39,6 +39,11 @@ contract DataPointStorage {
     function writeDataPoint(
         bytes memory _data
     ) external returns (bytes32 _dataPointAddress) {
+        // check that _data is not empty
+        if (_data.length == 0) {
+            revert InvalidData();
+        }
+
         _dataPointAddress = calculateAddress(_data);
         
         // Check if address is already occupied

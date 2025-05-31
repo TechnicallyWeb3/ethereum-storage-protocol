@@ -10,14 +10,14 @@ import "./interfaces/IDataPointStorage.sol";
 /// @dev Extends storage functionality with economic incentives
 contract DataPointRegistry is Ownable {
 
-    DataPointStorage public DPS_;
+    IDataPointStorage public DPS_;
 
     /// @notice Contract constructor
     /// @param _owner Should be a DAO or multisig, has admin control over the contract
     /// @param _dps Address of the DataPointStorage contract
     /// @param _royaltyRate Royalty rate in wei (should be 0.1-1% of chain's average gas fees)
     constructor(address _owner, address _dps, uint256 _royaltyRate) Ownable(_owner) {
-        DPS_ = DataPointStorage(_dps);
+        DPS_ = IDataPointStorage(_dps);
         royaltyRate = _royaltyRate;
     }
 
@@ -30,7 +30,7 @@ contract DataPointRegistry is Ownable {
         
         if (success && data.length == 32) {
             bytes32 dataPointAddress = abi.decode(data, (bytes32));
-            DataPointStorage _DPS = DataPointStorage(_dps);
+            IDataPointStorage _DPS = IDataPointStorage(_dps);
             if (dataPointAddress != calculateDataPointAddress(testDataPoint, _DPS.VERSION())) {
                 revert InvalidDPS();
             }

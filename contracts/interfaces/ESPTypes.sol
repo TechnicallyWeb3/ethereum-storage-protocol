@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 event DataPointWritten(bytes32 indexed dataPointAddress);
 
 error DataExists(bytes32 dataPointAddress);
-
+error InvalidData();
 error InvalidDPS();
 error InsufficientRoyaltyPayment(uint256 royaltyCost);
 error InvalidPublisher(address publisher);
