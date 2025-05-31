@@ -1,0 +1,33 @@
+{
+  "name": "ethereum-storage-protocol",
+  "version": "0.2.0",
+  "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TechnicallyWeb3/ethereum-storage-protocol.git"
+  },
+  "keywords": [
+    "esp",
+    "ethereum",
+    "storage",
+    "datapoint",
+    "registry",
+    "wttp",
+    "tw3"
+  ],
+  "author": "TechnicallyWeb3",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/TechnicallyWeb3/ethereum-storage-protocol/issues"
+  },
+  "homepage": "https://github.com/TechnicallyWeb3/ethereum-storage-protocol#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.3.0",
+    "hardhat": "^2.24.1"
+  }
+}
