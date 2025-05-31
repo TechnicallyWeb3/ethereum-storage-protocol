@@ -9,7 +9,7 @@ dotenv.config();
 const defaultMnemonic = 'test test test test test test test test test test test junk';
 const dpsMnemonic = process.env.DPS_DEPLOYER_MNEMONIC || defaultMnemonic;
 const dprMnemonic = process.env.DPR_DEPLOYER_MNEMONIC || defaultMnemonic;
-const tw3Mnemonic = process.env.TW3_MNEMONIC || defaultMnemonic;
+const tw3Mnemonic = process.env.OWNER_MNEMONIC || defaultMnemonic;
 
 if (dpsMnemonic === defaultMnemonic) {
   console.error('DPS_DEPLOYER_MNEMONIC is not set, using default mnemonic, DO NOT DEPLOY TO A LIVE NETWORK!');
@@ -29,7 +29,7 @@ const user2Key = ethers.Wallet.fromPhrase(tw3Mnemonic).deriveChild(2).privateKey
 const user3Key = ethers.Wallet.fromPhrase(tw3Mnemonic).deriveChild(3).privateKey;
 
 // For hardhat network - with balance configuration
-const espDeployersWithBalance = [
+const espDeployersHardhat = [
   { privateKey: dpsKey, balance: "10000000000000000000000" },
   { privateKey: dprKey, balance: "10000000000000000000000" },
   { privateKey: tw3Key, balance: "10000000000000000000000" },
@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
   solidity: "0.8.28",
   networks: {
     hardhat: {
-      accounts: espDeployersWithBalance,
+      accounts: espDeployersHardhat,
     },
     localhost: {
       url: "http://127.0.0.1:8545",

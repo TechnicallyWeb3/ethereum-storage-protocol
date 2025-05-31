@@ -23,6 +23,18 @@ async function main() {
   console.log(`DPR Deployer (signer 1): ${dprSigner.address}`);
   console.log(`DPR Owner (signer 2): ${owner.address}`);
 
+  // Check nonces for vanity deployment validation
+  const dpsNonce = await hre.ethers.provider.getTransactionCount(dpsSigner.address);
+  const dprNonce = await hre.ethers.provider.getTransactionCount(dprSigner.address);
+
+  console.log(`DPS Deployer Nonce: ${dpsNonce}`);
+  console.log(`DPR Deployer Nonce: ${dprNonce}`);
+
+  // Validate DPR nonce (must be 0 for vanity deployment)
+  if (dprNonce > 0) {
+    throw new Error(`Vanity nonce error: DPR deployer nonce is ${dprNonce}, expected 0. DPR deployer has been used before.`);
+  }
+
   // Check balances
   let dpsBalance = await hre.ethers.provider.getBalance(dpsSigner.address);
   let dprBalance = await hre.ethers.provider.getBalance(dprSigner.address);
@@ -102,35 +114,85 @@ async function main() {
     return newBalance;
   }
 
+  let dataPointStorage: DataPointStorage | undefined;
+  let dpsAddress: string | undefined;
+  let skipDpsDeployment = false;
+
   try {
     // ========================================
-    // STEP 1: DPS Estimation and Deployment
+    // STEP 1: DPS Nonce Check and Deployment
     // ========================================
     console.log("📦 Step 1: DataPointStorage (DPS) Deployment");
-    console.log("⛽ Estimating DPS deployment cost...");
-    
-    const DataPointStorageFactory = await hre.ethers.getContractFactory("DataPointStorage");
-    const dpsDeployTx = await DataPointStorageFactory.connect(dpsSigner).getDeployTransaction();
-    const dpsGasEstimate = await hre.ethers.provider.estimateGas({
-      ...dpsDeployTx,
-      from: dpsSigner.address
-    });
-    
-    const dpsCost = (dpsGasEstimate * gasPrice * bufferMultiplier) / divisor;
-    
-    console.log(`💰 DPS deployment cost (with 10% buffer): ~${formatEther(dpsCost)} ETH (${dpsGasEstimate.toString()} gas)`);
-    
-    // Check and fund DPS deployer if needed
-    dpsBalance = await fundDeployerIfNeeded(dpsSigner, dpsBalance, dpsCost, "DPS");
-    
-    console.log("🚀 Deploying DataPointStorage...");
-    
-    const dataPointStorage = await DataPointStorageFactory.connect(dpsSigner).deploy() as DataPointStorage;
-    await dataPointStorage.waitForDeployment();
-    const dpsAddress = await dataPointStorage.getAddress();
 
-    console.log(`✅ DataPointStorage deployed to: ${dpsAddress}`);
-    console.log(`   Deployed by: ${dpsSigner.address}`);
+    // Check for existing DPS deployment if nonce != 0
+    if (dpsNonce !== 0) {
+      console.log(`⚠️  DPS deployer nonce is ${dpsNonce}, checking for existing deployment...`);
+      
+      // Calculate deterministic address for nonce 0
+      const expectedDpsAddress = hre.ethers.getCreateAddress({
+        from: dpsSigner.address,
+        nonce: 0
+      });
+      
+      console.log(`Expected DPS address (nonce 0): ${expectedDpsAddress}`);
+      
+      // Check if contract exists at the expected address
+      const contractCode = await hre.ethers.provider.getCode(expectedDpsAddress);
+      const contractExists = contractCode !== "0x";
+      
+      if (contractExists) {
+        console.log("✅ Found existing DPS contract at expected address, skipping deployment");
+        
+        // Connect to existing contract
+        const DataPointStorageFactory = await hre.ethers.getContractFactory("DataPointStorage");
+        dataPointStorage = DataPointStorageFactory.attach(expectedDpsAddress) as DataPointStorage;
+        dpsAddress = expectedDpsAddress;
+        skipDpsDeployment = true;
+        
+        // Verify it's actually a DPS contract
+        try {
+          const version = await dataPointStorage.VERSION();
+          console.log(`   Existing DPS version: ${version}`);
+        } catch (error) {
+          throw new Error(`Contract at expected DPS address ${expectedDpsAddress} is not a valid DataPointStorage contract`);
+        }
+      } else {
+        throw new Error(`Vanity nonce error: Nonce not 0 and contract not deployed. Expected DPS at ${expectedDpsAddress} but no contract found.`);
+      }
+    }
+
+    if (!skipDpsDeployment) {
+      console.log("⛽ Estimating DPS deployment cost...");
+      
+      const DataPointStorageFactory = await hre.ethers.getContractFactory("DataPointStorage");
+      const dpsDeployTx = await DataPointStorageFactory.connect(dpsSigner).getDeployTransaction();
+      const dpsGasEstimate = await hre.ethers.provider.estimateGas({
+        ...dpsDeployTx,
+        from: dpsSigner.address
+      });
+      
+      const dpsCost = (dpsGasEstimate * gasPrice * bufferMultiplier) / divisor;
+      
+      console.log(`💰 DPS deployment cost (with 10% buffer): ~${formatEther(dpsCost)} ETH (${dpsGasEstimate.toString()} gas)`);
+      
+      // Check and fund DPS deployer if needed
+      dpsBalance = await fundDeployerIfNeeded(dpsSigner, dpsBalance, dpsCost, "DPS");
+      
+      console.log("🚀 Deploying DataPointStorage...");
+      
+      dataPointStorage = await DataPointStorageFactory.connect(dpsSigner).deploy() as DataPointStorage;
+      await dataPointStorage.waitForDeployment();
+      dpsAddress = await dataPointStorage.getAddress();
+
+      console.log(`✅ DataPointStorage deployed to: ${dpsAddress}`);
+      console.log(`   Deployed by: ${dpsSigner.address}`);
+    }
+
+    // Ensure we have both dataPointStorage and dpsAddress
+    if (!dataPointStorage || !dpsAddress) {
+      throw new Error("Failed to initialize DataPointStorage contract");
+    }
+
     console.log(`   Version: ${await dataPointStorage.VERSION()}\n`);
 
     // ========================================
@@ -247,7 +309,7 @@ async function main() {
     const finalDprBalance = await hre.ethers.provider.getBalance(dprSigner.address);
     const finalOwnerBalance = await hre.ethers.provider.getBalance(owner.address);
     
-    const actualDpsCost = dpsBalance - finalDpsBalance;
+    const actualDpsCost = skipDpsDeployment ? 0n : (dpsBalance - finalDpsBalance);
     const actualDprCost = dprBalance - finalDprBalance;
     const ownerSpent = ownerBalance - finalOwnerBalance;
 
@@ -255,14 +317,16 @@ async function main() {
     console.log("\n📄 Deployment Summary:");
     console.log("=".repeat(60));
     console.log(`Network:          ${network}`);
-    console.log(`DataPointStorage: ${dpsAddress}`);
-    console.log(`DataPointRegistry: ${dprAddress}`);
+    console.log(`DataPointStorage: ${dpsAddress} ${skipDpsDeployment ? "(existing)" : "(deployed)"}`);
+    console.log(`DataPointRegistry: ${dprAddress} (deployed)`);
     console.log(`Owner:            ${owner.address}`);
     console.log(`Royalty Rate:     ${formatEther(royaltyRate)} ETH`);
     console.log(`\nDeployment costs:`);
-    console.log(`DPS estimated:    ${formatEther(dpsCost)} ETH`);
-    console.log(`DPS actual:       ${formatEther(actualDpsCost)} ETH`);
-    console.log(`DPR estimated:    ${formatEther(dprCost)} ETH`);
+    if (!skipDpsDeployment) {
+      console.log(`DPS actual:       ${formatEther(actualDpsCost)} ETH`);
+    } else {
+      console.log(`DPS:              Skipped (existing contract)`);
+    }
     console.log(`DPR actual:       ${formatEther(actualDprCost)} ETH`);
     console.log(`Total spent:      ${formatEther(actualDpsCost + actualDprCost)} ETH`);
     if (ownerSpent > 0n) {
@@ -294,6 +358,9 @@ async function main() {
         total: actualDpsCost + actualDprCost,
         ownerFunding: ownerSpent,
         grandTotal: actualDpsCost + actualDprCost + ownerSpent
+      },
+      skipped: {
+        dps: skipDpsDeployment
       }
     };
 
