@@ -52,13 +52,13 @@ mainnet: {
     contractAddress: '0x1234...',
     deployerAddress: '0xABCD...',
     txHash: '0x5678...',
-    deployedAt: '2024-12-20T15:30:45.123Z'
+    deployedAt: '2025-05-31T15:30:45.123Z'
   },
   dpr: {
     contractAddress: '0x9876...',
     deployerAddress: '0xEFGH...',
     txHash: '0x2468...',
-    deployedAt: '2024-12-20T15:31:02.456Z',
+    deployedAt: '2025-05-31T15:31:02.456Z',
     constructors: {
       ownerAddress: '0x1111...',
       dpsAddress: '0x1234...',
@@ -66,4 +66,4 @@ mainnet: {
     }
   }
 }
-``` 
+```

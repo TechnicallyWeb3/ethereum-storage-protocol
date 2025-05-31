@@ -31,7 +31,9 @@
     "dist/",
     "README.md",
     "LICENSE",
-    "LLM_CONTEXT.md"
+    "LLM_CONTEXT.md",
+    "TIMESTAMP.md",
+    "ANTI_THEFT_MONITORING.md"
   ],
   "scripts": {
     "test": "npx hardhat test",

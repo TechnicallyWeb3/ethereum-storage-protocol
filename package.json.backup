@@ -1,5 +1,5 @@
 {
-  "name": "@tw3/esp",
+  "name": "ethereum-storage",
   "version": "0.3.0",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/index.js",
@@ -31,9 +31,7 @@
     "dist/",
     "README.md",
     "LICENSE",
-    "LLM_CONTEXT.md",
-    "TIMESTAMP.md",
-    "ANTI_THEFT_MONITORING.md"
+    "LLM_CONTEXT.md"
   ],
   "scripts": {
     "test": "npx hardhat test",
