@@ -1,0 +1,41 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src/**/*",
+    "esp.deployments.ts",
+    "typechain-types/common.ts",
+    "typechain-types/contracts/DataPointRegistry.ts",
+    "typechain-types/contracts/DataPointStorage.ts",
+    "typechain-types/contracts/interfaces/IDataPointRegistry.ts",
+    "typechain-types/contracts/interfaces/IDataPointStorage.ts",
+    "typechain-types/factories/contracts/DataPointRegistry__factory.ts",
+    "typechain-types/factories/contracts/DataPointStorage__factory.ts",
+    "typechain-types/factories/contracts/interfaces/IDataPointRegistry__factory.ts",
+    "typechain-types/factories/contracts/interfaces/IDataPointStorage__factory.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "scripts",
+    "artifacts",
+    "cache",
+    "typechain-types/@openzeppelin",
+    "typechain-types/**/test/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+} 

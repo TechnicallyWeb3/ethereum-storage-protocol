@@ -18,7 +18,79 @@ The Ethereum Storage Protocol provides immutable, content-addressed storage with
 - 🔧 **Modular Design**: Upgradeable registry with persistent storage layer
 - 📊 **Comprehensive Testing**: 95/95 tests passing with full coverage
 
+## Installation
+
+```bash
+npm install ethereum-storage-protocol
+```
+
 ## Quick Start
+
+### Using the NPM Package
+
+```typescript
+import { 
+  DataPointRegistry__factory, 
+  DataPointStorage__factory,
+  espDeployments,
+  getContractAddress 
+} from 'ethereum-storage-protocol';
+import { ethers } from 'ethers';
+
+// Connect to deployed contracts
+const provider = new ethers.JsonRpcProvider('YOUR_RPC_URL');
+const signer = new ethers.Wallet('YOUR_PRIVATE_KEY', provider);
+
+// Get contract addresses for your network
+const dpsAddress = getContractAddress('sepolia', 'dps');
+const dprAddress = getContractAddress('sepolia', 'dpr');
+
+// Connect to contracts
+const dataPointStorage = DataPointStorage__factory.connect(dpsAddress, signer);
+const dataPointRegistry = DataPointRegistry__factory.connect(dprAddress, signer);
+
+// Store data with royalties
+const data = ethers.toUtf8Bytes("Hello, ESP!");
+const tx = await dataPointRegistry.registerDataPoint(data, signer.address);
+await tx.wait();
+```
+
+### Available Exports
+
+```typescript
+// Contract types and factories
+import {
+  DataPointRegistry,
+  DataPointRegistry__factory,
+  DataPointStorage,
+  DataPointStorage__factory,
+  IDataPointRegistry,
+  IDataPointStorage
+} from 'ethereum-storage-protocol';
+
+// Contract ABIs
+import {
+  DataPointRegistryABI,
+  DataPointStorageABI
+} from 'ethereum-storage-protocol/contracts';
+
+// Deployment information
+import {
+  espDeployments,
+  getContractAddress,
+  getDeploymentInfo,
+  getSupportedNetworks
+} from 'ethereum-storage-protocol/deployments';
+
+// TypeScript types
+import type {
+  ContractTransaction,
+  BigNumberish,
+  Overrides
+} from 'ethereum-storage-protocol/types';
+```
+
+### Development Setup
 
 ```shell
 # Install dependencies
@@ -29,6 +101,8 @@ npm test
 
 # Deploy contracts
 npx hardhat ignition deploy ./ignition/modules/ESPCore.ts
+```
+
 ## Architecture
 
 ```
@@ -49,6 +123,14 @@ User/DApp → DataPointRegistry → DataPointStorage
 - `getDataPointRoyalty(bytes32 address)` - Get royalty cost for access
 - `collectRoyalties(uint256 amount, address to)` - Withdraw earned royalties
 - `updatePublisherAddress(bytes32 address, address newPublisher)` - Change publisher
+
+## Deployed Networks
+
+The ESP contracts are currently deployed on:
+
+- **Sepolia Testnet**: 
+  - DataPointStorage: `0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB`
+  - DataPointRegistry: `0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE`
 
 ## Security Status
 

@@ -16,8 +16,22 @@ node_modules
 # Hardhat Ignition default folder for deployments against a local node
 ignition/deployments/chain-31337
 
-# Build folder for NPM package
+# Build folder for NPM package (ignored during development, included in npm)
 /dist
 
 # Smart contract audits
 /audits
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db

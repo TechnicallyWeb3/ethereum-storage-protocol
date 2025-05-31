@@ -2,9 +2,46 @@
   "name": "ethereum-storage-protocol",
   "version": "0.2.0",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
-  "main": "index.js",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./contracts": {
+      "import": "./dist/esm/contracts/index.js",
+      "require": "./dist/cjs/contracts/index.js",
+      "types": "./dist/types/contracts/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/esm/types/index.js",
+      "require": "./dist/cjs/types/index.js",
+      "types": "./dist/types/types/index.d.ts"
+    },
+    "./deployments": {
+      "import": "./dist/esm/deployments.js",
+      "require": "./dist/cjs/deployments.js",
+      "types": "./dist/types/deployments.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "build": "npm run clean && npm run build:types && npm run build:cjs && npm run build:esm && npm run copy:contracts",
+    "build:types": "tsc --project tsconfig.build.json --declaration --emitDeclarationOnly --outDir dist/types",
+    "build:cjs": "tsc --project tsconfig.build.json --module commonjs --outDir dist/cjs",
+    "build:esm": "tsc --project tsconfig.build.json --module esnext --outDir dist/esm",
+    "copy:contracts": "ts-node scripts/copy-contracts.ts",
+    "clean": "rimraf dist",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "repository": {
     "type": "git",
@@ -17,7 +54,10 @@
     "datapoint",
     "registry",
     "wttp",
-    "tw3"
+    "tw3",
+    "smart-contracts",
+    "solidity",
+    "typechain"
   ],
   "author": "TechnicallyWeb3",
   "license": "AGPL-3.0",
@@ -30,6 +70,12 @@
     "@openzeppelin/contracts": "^5.3.0",
     "dotenv": "^16.5.0",
     "hardhat": "^2.24.1",
-    "hardhat-contract-sizer": "^2.10.0"
+    "hardhat-contract-sizer": "^2.10.0",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@openzeppelin/contracts": "^5.0.0"
   }
 }
