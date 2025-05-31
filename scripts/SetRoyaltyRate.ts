@@ -30,7 +30,7 @@ export async function setRoyaltyRate(
   
   const dprAddress = networkConfig.dpr.contractAddress;
   console.log(`📍 DPR Contract Address: ${dprAddress}`);
-  console.log(`💰 New Royalty Rate: ${newRoyaltyRate} wei`);
+  console.log(`💰 New Royalty Rate: ${ethers.formatUnits(newRoyaltyRate, "gwei")} GWEI`);
   
   // Get the signer (should be the owner of the contract)
   const signers = await ethers.getSigners();
@@ -52,10 +52,10 @@ export async function setRoyaltyRate(
   
   // Get current royalty rate for comparison
   const currentRoyaltyRate = await DPR.royaltyRate();
-  console.log(`📊 Current royalty rate: ${currentRoyaltyRate.toString()} wei`);
+  console.log(`📊 Current royalty rate: ${ethers.formatUnits(currentRoyaltyRate.toString(), "gwei")} GWEI`);
   
   if (currentRoyaltyRate.toString() === newRoyaltyRate) {
-    console.log(`✅ Royalty rate is already set to ${newRoyaltyRate} wei. No change needed.`);
+    console.log(`✅ Royalty rate is already set to ${ethers.formatUnits(newRoyaltyRate, "gwei")} GWEI. No change needed.`);
     return;
   }
   
@@ -70,8 +70,8 @@ export async function setRoyaltyRate(
   
   if (receipt?.status === 1) {
     console.log(`✅ Royalty rate successfully updated!`);
-    console.log(`📊 Previous rate: ${currentRoyaltyRate.toString()} wei`);
-    console.log(`📊 New rate: ${newRoyaltyRate} wei`);
+    console.log(`📊 Previous rate: ${ethers.formatUnits(currentRoyaltyRate.toString(), "gwei")} GWEI`);
+    console.log(`📊 New rate: ${ethers.formatUnits(newRoyaltyRate, "gwei")} GWEI`);
     console.log(`⛽ Gas used: ${receipt.gasUsed.toString()}`);
     console.log(`🧾 Block number: ${receipt.blockNumber}`);
   } else {
@@ -101,9 +101,10 @@ export async function getCurrentRoyaltyRate(networkName: string): Promise<string
   
   const royaltyRate = await DPR.royaltyRate();
   const rateString = royaltyRate.toString();
+  const rateGwei = ethers.formatUnits(rateString, "gwei");
   
-  console.log(`📊 Current royalty rate: ${rateString} wei`);
-  console.log(`💰 In GWEI: ${ethers.formatUnits(rateString, "gwei")} GWEI`);
+  console.log(`📊 Current royalty rate: ${rateGwei} GWEI`);
+  console.log(`💰 Raw value: ${rateString} wei`);
   
   return rateString;
 }

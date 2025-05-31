@@ -18,12 +18,14 @@ Located in `scripts/SetRoyaltyRate.ts`, this script provides programmatic access
 # Get current royalty rate
 ACTION=get npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia
 
-# Set new royalty rate
-ACTION=set ROYALTY_RATE=1000000000000000 npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia
+# Set new royalty rate (note: script still uses wei, but tasks use GWEI)
+ACTION=set ROYALTY_RATE=20000000 npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia
 
 # Set royalty rate with custom signer
-ACTION=set ROYALTY_RATE=2000000000000000 SIGNER_INDEX=2 npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia
+ACTION=set ROYALTY_RATE=30000000 SIGNER_INDEX=2 npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia
 ```
+
+**Note**: The underlying script still uses wei, but the Hardhat tasks now accept GWEI for better usability.
 
 ### 2. Hardhat Tasks
 
@@ -33,11 +35,11 @@ ACTION=set ROYALTY_RATE=2000000000000000 SIGNER_INDEX=2 npx hardhat run scripts/
 # Get current royalty rate
 npx hardhat royalty get --network sepolia
 
-# Set new royalty rate
-npx hardhat royalty set --rate 1000000000000000 --network sepolia
+# Set new royalty rate (now in GWEI!)
+npx hardhat royalty set --rate 0.01 --network sepolia
 
 # Set royalty rate with custom signer
-npx hardhat royalty set --rate 1000000000000000 --signer 2 --network sepolia
+npx hardhat royalty set --rate 0.02 --signer 2 --network sepolia
 ```
 
 #### Convenience Tasks:
@@ -46,16 +48,17 @@ npx hardhat royalty set --rate 1000000000000000 --signer 2 --network sepolia
 # Get current royalty rate (shorthand)
 npx hardhat royalty:get --network sepolia
 
-# Set new royalty rate (shorthand)
-npx hardhat royalty:set --rate 1000000000000000 --network sepolia
+# Set new royalty rate (shorthand, now in GWEI!)
+npx hardhat royalty:set --rate 0.01 --network sepolia
 ```
 
 ## Parameters
 
 ### Royalty Rate
-- **Format**: Wei (string)
-- **Example**: `"1000000000000000"` = 0.001 ETH = 1,000 GWEI
+- **Format**: GWEI (string) - **Updated from wei to GWEI for better usability**
+- **Example**: `--rate 0.01` sets 0.01 GWEI royalty rate
 - **Purpose**: Cost charged for accessing existing data points
+- **Conversion**: Tasks automatically convert GWEI to wei internally
 
 ### Signer Index
 - **Default**: 2 (TW3 owner account)
@@ -94,44 +97,53 @@ Output:
 ```
 📊 Getting current royalty rate on sepolia network...
 📍 DPR Contract Address: 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE
-📊 Current royalty rate: 1000000000000000 wei
-💰 In GWEI: 1000.0 GWEI
+📊 Current royalty rate: 0.03 GWEI
+💰 Raw value: 30000000 wei
 ```
 
 ### Scenario 2: Update Royalty Rate
 
 ```bash
-npx hardhat royalty:set --rate 2000000000000000 --network sepolia
+npx hardhat royalty:set --rate 0.02 --network sepolia
 ```
 
 Output:
 ```
 🌐 Network: sepolia
 👤 Using signer index: 2
+💰 Converting 0.02 GWEI to 20000000 wei
 🔧 Setting royalty rate on sepolia network...
 📍 DPR Contract Address: 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE
-💰 New Royalty Rate: 2000000000000000 wei
+💰 New Royalty Rate: 0.02 GWEI
 👤 Using signer: 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3
-📊 Current royalty rate: 1000000000000000 wei
+📊 Current royalty rate: 0.03 GWEI
 🚀 Sending transaction to set new royalty rate...
 ⏳ Transaction hash: 0x...
 ⏳ Waiting for confirmation...
 ✅ Royalty rate successfully updated!
-📊 Previous rate: 1000000000000000 wei
-📊 New rate: 2000000000000000 wei
-⛽ Gas used: 28956
-🧾 Block number: 7234567
+📊 Previous rate: 0.03 GWEI
+📊 New rate: 0.02 GWEI
+⛽ Gas used: 28992
+🧾 Block number: 8448967
 ```
 
 ### Scenario 3: Rate Already Set
 
 ```bash
-npx hardhat royalty:set --rate 1000000000000000 --network sepolia
+npx hardhat royalty:set --rate 0.03 --network sepolia
 ```
 
 Output:
 ```
-✅ Royalty rate is already set to 1000000000000000 wei. No change needed.
+🌐 Network: sepolia
+👤 Using signer index: 2
+💰 Converting 0.03 GWEI to 30000000 wei
+🔧 Setting royalty rate on sepolia network...
+📍 DPR Contract Address: 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE
+💰 New Royalty Rate: 0.03 GWEI
+👤 Using signer: 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3
+📊 Current royalty rate: 0.03 GWEI
+✅ Royalty rate is already set to 0.03 GWEI. No change needed.
 ```
 
 ## Error Handling

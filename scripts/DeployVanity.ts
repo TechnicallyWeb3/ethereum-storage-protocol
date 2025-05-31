@@ -7,10 +7,12 @@ import { addDeployment, formatDeploymentData } from './AddDeployment';
  * Deploy ESP contracts with vanity addresses
  * @param hardhatRuntime - Hardhat runtime environment
  * @param customRoyaltyRate - Custom royalty rate in wei (optional, defaults to 1/1000th of gas price)
+ * @param skipVerification - Skip contract verification (optional, defaults to false)
  */
 export async function deployWithVanity(
   hardhatRuntime: typeof hre = hre,
-  customRoyaltyRate?: bigint
+  customRoyaltyRate?: bigint,
+  skipVerification: boolean = false
 ) {
   console.log("🚀 Starting vanity deployment script...\n");
 
@@ -276,7 +278,7 @@ export async function deployWithVanity(
     console.log(`Test data point address: ${calculatedAddress}`);
 
     // Contract verification
-    if (shouldVerify) {
+    if (shouldVerify && !skipVerification) {
       console.log("\n🔍 Starting contract verification...");
       
       try {
@@ -345,7 +347,7 @@ export async function deployWithVanity(
       console.log(`Owner funding:    ${formatEther(ownerSpent)} ETH`);
       console.log(`Grand total:      ${formatEther(actualDpsCost + actualDprCost + ownerSpent)} ETH`);
     }
-    if (shouldVerify) {
+    if (shouldVerify && !skipVerification) {
       console.log(`Etherscan:        Contracts verified on block explorer`);
     }
     console.log("=".repeat(60));

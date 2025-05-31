@@ -21,8 +21,8 @@ npx hardhat deploy:vanity --network sepolia
 # Deploy with custom royalty rate (in GWEI)
 npx hardhat deploy:vanity --royalty 0.01 --network sepolia
 
-# Deploy with explicit verification flag (auto-enabled for non-local networks)
-npx hardhat deploy:vanity --royalty 0.5 --verify --network sepolia
+# Deploy without verification (verification enabled by default)
+npx hardhat deploy:vanity --royalty 0.5 --skip-verify --network sepolia
 ```
 
 #### Parameters
@@ -32,9 +32,9 @@ npx hardhat deploy:vanity --royalty 0.5 --verify --network sepolia
   - **Example**: `--royalty 0.01` (sets 0.01 GWEI royalty rate)
   - **Format**: String representing GWEI amount
 
-- **`--verify`** (flag): Force contract verification
-  - **Default**: Auto-enabled for mainnet/testnet, disabled for local networks
-  - **Usage**: Add flag to force verification
+- **`--skip-verify`** (flag): Skip contract verification
+  - **Default**: Verification enabled for mainnet/testnet, disabled for local networks
+  - **Usage**: Add flag to skip verification
 
 #### Features
 
@@ -42,10 +42,53 @@ npx hardhat deploy:vanity --royalty 0.5 --verify --network sepolia
 ✅ **Vanity Address Support**: Handles vanity deployment requirements and nonce validation  
 ✅ **Smart Funding**: Automatically funds deployer accounts from owner if needed  
 ✅ **Registry Integration**: Updates `esp.deployments.ts` automatically  
-✅ **Verification**: Auto-verifies contracts on block explorers  
+✅ **Verification by Default**: Auto-verifies contracts on block explorers unless skipped  
 ✅ **GWEI Display**: Shows all rates in human-readable GWEI format  
 
-### 2. `deploy:verify` - Verify Deployed Contracts
+### 2. `deploy:ignition` - Deploy using Hardhat Ignition
+
+Deploy ESP contracts using Hardhat's Ignition deployment system for more robust and resumable deployments.
+
+#### Usage
+
+```bash
+# Deploy with default settings (0.1 GWEI royalty rate)
+npx hardhat deploy:ignition --network sepolia
+
+# Deploy with custom royalty rate
+npx hardhat deploy:ignition --royalty 0.05 --network sepolia
+
+# Deploy with custom owner
+npx hardhat deploy:ignition --owner 0x123... --royalty 0.02 --network sepolia
+
+# Deploy without verification
+npx hardhat deploy:ignition --royalty 0.1 --skip-verify --network sepolia
+```
+
+#### Parameters
+
+- **`--royalty`** (optional): Royalty rate in GWEI
+  - **Default**: 0.1 GWEI
+  - **Example**: `--royalty 0.05` (sets 0.05 GWEI royalty rate)
+  - **Format**: String representing GWEI amount
+
+- **`--owner`** (optional): Contract owner address
+  - **Default**: First signer (deployer)
+  - **Example**: `--owner 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3`
+
+- **`--skip-verify`** (flag): Skip contract verification
+  - **Default**: Verification enabled for mainnet/testnet
+  - **Usage**: Add flag to skip verification
+
+#### Features
+
+✅ **Ignition Framework**: Uses Hardhat Ignition for robust deployment management  
+✅ **Resumable Deployments**: Can resume interrupted deployments  
+✅ **Atomic Operations**: Ensures all contracts deploy successfully or none do  
+✅ **Parameter Management**: Clean parameter passing to deployment modules  
+✅ **Auto Verification**: Automatically verifies contracts unless skipped  
+
+### 3. `deploy:verify` - Verify Deployed Contracts
 
 Verify already-deployed contracts on block explorers.
 

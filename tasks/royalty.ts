@@ -9,7 +9,7 @@ task("royalty", "Manage DPR contract royalty rates")
   )
   .addOptionalParam(
     "rate", 
-    "New royalty rate in wei (required for 'set' action)",
+    "New royalty rate in GWEI (required for 'set' action)",
     undefined,
     types.string
   )
@@ -34,10 +34,13 @@ task("royalty", "Manage DPR contract royalty rates")
         await getCurrentRoyaltyRate(networkName);
       } else if (action === "set") {
         if (!rate) {
-          throw new Error("❌ Rate parameter is required for 'set' action. Use --rate <value_in_wei>");
+          throw new Error("❌ Rate parameter is required for 'set' action. Use --rate <value_in_gwei>");
         }
+        // Convert GWEI to wei
+        const rateInWei = hre.ethers.parseUnits(rate, "gwei").toString();
         console.log(`👤 Using signer index: ${signer}`);
-        await setRoyaltyRate(networkName, rate, signer);
+        console.log(`💰 Converting ${rate} GWEI to ${rateInWei} wei`);
+        await setRoyaltyRate(networkName, rateInWei, signer);
       } else {
         throw new Error(`❌ Invalid action: ${action}. Use 'get' or 'set'`);
       }
@@ -55,7 +58,7 @@ task("royalty:get", "Get current royalty rate")
   });
 
 task("royalty:set", "Set new royalty rate")
-  .addParam("rate", "New royalty rate in wei", undefined, types.string)
+  .addParam("rate", "New royalty rate in GWEI", undefined, types.string)
   .addOptionalParam(
     "signer", 
     "Index of the signer account to use (default: 2 for TW3 owner)",
@@ -67,5 +70,9 @@ task("royalty:set", "Set new royalty rate")
     const { rate, signer } = taskArgs;
     console.log(`🌐 Network: ${hre.network.name}`);
     console.log(`👤 Using signer index: ${signer}`);
-    await setRoyaltyRate(hre.network.name, rate, signer);
+    
+    // Convert GWEI to wei
+    const rateInWei = hre.ethers.parseUnits(rate, "gwei").toString();
+    console.log(`💰 Converting ${rate} GWEI to ${rateInWei} wei`);
+    await setRoyaltyRate(hre.network.name, rateInWei, signer);
   }); 
