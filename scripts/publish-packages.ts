@@ -16,21 +16,6 @@ interface PublishOptions {
   access?: 'public' | 'restricted';
 }
 
-function backupFile(filePath: string): string {
-  const backupPath = `${filePath}.backup`;
-  if (fs.existsSync(filePath)) {
-    fs.copyFileSync(filePath, backupPath);
-  }
-  return backupPath;
-}
-
-function restoreFile(filePath: string, backupPath: string): void {
-  if (fs.existsSync(backupPath)) {
-    fs.copyFileSync(backupPath, filePath);
-    fs.unlinkSync(backupPath);
-  }
-}
-
 function publishPackage(
   packageName: string, 
   packageJsonPath: string, 
@@ -38,29 +23,37 @@ function publishPackage(
 ): void {
   console.log(`\n🚀 Publishing ${packageName}...`);
   
-  // Backup current package.json
+  // Read the package config for this publication
+  const packageConfig = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  
+  // Build the publish command
+  let publishCmd = 'npm publish';
+  
+  if (options.dryRun) {
+    publishCmd += ' --dry-run';
+  }
+  
+  if (options.tag) {
+    publishCmd += ` --tag ${options.tag}`;
+  }
+  
+  if (options.access) {
+    publishCmd += ` --access ${options.access}`;
+  }
+  
+  // If this is not the main package.json, we need to temporarily swap it
   const mainPackageJson = 'package.json';
-  const backupPath = backupFile(mainPackageJson);
+  let originalContent: string | null = null;
+  
+  if (packageJsonPath !== mainPackageJson) {
+    // Backup original package.json content
+    originalContent = fs.readFileSync(mainPackageJson, 'utf8');
+    
+    // Temporarily replace with the target package config
+    fs.writeFileSync(mainPackageJson, JSON.stringify(packageConfig, null, 2) + '\n');
+  }
   
   try {
-    // Copy the specific package.json
-    fs.copyFileSync(packageJsonPath, mainPackageJson);
-    
-    // Build the publish command
-    let publishCmd = 'npm publish';
-    
-    if (options.dryRun) {
-      publishCmd += ' --dry-run';
-    }
-    
-    if (options.tag) {
-      publishCmd += ` --tag ${options.tag}`;
-    }
-    
-    if (options.access) {
-      publishCmd += ` --access ${options.access}`;
-    }
-    
     console.log(`Executing: ${publishCmd}`);
     
     // Execute publish command
@@ -72,8 +65,10 @@ function publishPackage(
     console.error(`❌ Failed to publish ${packageName}:`, error);
     throw error;
   } finally {
-    // Restore original package.json
-    restoreFile(mainPackageJson, backupPath);
+    // Restore original package.json if we modified it
+    if (originalContent && packageJsonPath !== mainPackageJson) {
+      fs.writeFileSync(mainPackageJson, originalContent);
+    }
   }
 }
 
@@ -93,11 +88,14 @@ function main(): void {
     access: 'public'
   };
   
+  // IMPORTANT: Always backup the original package.json at the start
+  const originalPackageJson = fs.readFileSync('package.json', 'utf8');
+  
   try {
-    // Publish public package
+    // Publish public package (uses current package.json)
     publishPackage('ethereum-storage', 'package.json', options);
     
-    // Publish organization scoped package  
+    // Publish organization scoped package (temporarily swaps package.json)
     publishPackage('@tw3/esp', 'package.tw3.json', options);
     
     console.log('\n🎉 All packages published successfully!');
@@ -110,7 +108,12 @@ function main(): void {
     
   } catch (error) {
     console.error('\n💥 Publishing failed:', error);
+    // Ensure we restore package.json even on error
+    fs.writeFileSync('package.json', originalPackageJson);
     process.exit(1);
+  } finally {
+    // Final safety restore - ensure package.json is always restored
+    fs.writeFileSync('package.json', originalPackageJson);
   }
 }
 

@@ -35,3 +35,5 @@ yarn-error.log*
 # OS generated files
 .DS_Store
 Thumbs.db
+
+ANTI_THEFT_MONITORING.md
