@@ -18,3 +18,6 @@ ignition/deployments/chain-31337
 
 # Build folder for NPM package
 /dist
+
+# Smart contract audits
+/audits

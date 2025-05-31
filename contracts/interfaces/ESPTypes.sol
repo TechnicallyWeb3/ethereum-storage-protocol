@@ -25,3 +25,10 @@ function calculateDataPointAddress(
 ) pure returns (bytes32) {
     return keccak256(abi.encodePacked(_data, _version));
 }
+
+/// @notice Structure for tracking royalty information
+/// @dev Stores gas usage and publisher address for royalty calculations
+struct DataPointRoyalty {
+    uint256 gasUsed;
+    address publisher;
+}
