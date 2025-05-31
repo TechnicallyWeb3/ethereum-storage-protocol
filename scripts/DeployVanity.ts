@@ -3,20 +3,26 @@ import { formatEther, parseUnits, toUtf8Bytes } from "ethers";
 import { DataPointStorage, DataPointRegistry } from "../typechain-types";
 import { addDeployment, formatDeploymentData } from './AddDeployment';
 
-const ROYALTY_RATE = 0n;// parseUnits("0.001", "gwei");
-
-async function main() {
+/**
+ * Deploy ESP contracts with vanity addresses
+ * @param hardhatRuntime - Hardhat runtime environment
+ * @param customRoyaltyRate - Custom royalty rate in wei (optional, defaults to 1/1000th of gas price)
+ */
+export async function deployWithVanity(
+  hardhatRuntime: typeof hre = hre,
+  customRoyaltyRate?: bigint
+) {
   console.log("🚀 Starting vanity deployment script...\n");
 
   // Get network information
-  const network = hre.network.name;
+  const network = hardhatRuntime.network.name;
   const shouldVerify = network !== "hardhat" && network !== "localhost";
   
   console.log(`📡 Network: ${network}`);
   console.log(`🔍 Contract verification: ${shouldVerify ? "ENABLED" : "DISABLED (local network)"}\n`);
 
   // Get signers - DPS uses signer(0), DPR uses signer(1)
-  const signers = await hre.ethers.getSigners();
+  const signers = await hardhatRuntime.ethers.getSigners();
   const dpsSigner = signers[0]; // DPS deployer
   const dprSigner = signers[1]; // DPR deployer
   const owner = signers[2]; // Owner for DPR contract
@@ -27,8 +33,8 @@ async function main() {
   console.log(`DPR Owner (signer 2): ${owner.address}`);
 
   // Check nonces for vanity deployment validation
-  const dpsNonce = await hre.ethers.provider.getTransactionCount(dpsSigner.address);
-  const dprNonce = await hre.ethers.provider.getTransactionCount(dprSigner.address);
+  const dpsNonce = await hardhatRuntime.ethers.provider.getTransactionCount(dpsSigner.address);
+  const dprNonce = await hardhatRuntime.ethers.provider.getTransactionCount(dprSigner.address);
 
   console.log(`DPS Deployer Nonce: ${dpsNonce}`);
   console.log(`DPR Deployer Nonce: ${dprNonce}`);
@@ -39,16 +45,16 @@ async function main() {
   }
 
   // Check balances
-  let dpsBalance = await hre.ethers.provider.getBalance(dpsSigner.address);
-  let dprBalance = await hre.ethers.provider.getBalance(dprSigner.address);
-  const ownerBalance = await hre.ethers.provider.getBalance(owner.address);
+  let dpsBalance = await hardhatRuntime.ethers.provider.getBalance(dpsSigner.address);
+  let dprBalance = await hardhatRuntime.ethers.provider.getBalance(dprSigner.address);
+  const ownerBalance = await hardhatRuntime.ethers.provider.getBalance(owner.address);
 
   console.log(`DPS Deployer Balance: ${formatEther(dpsBalance)} ETH`);
   console.log(`DPR Deployer Balance: ${formatEther(dprBalance)} ETH`);
   console.log(`Owner Balance: ${formatEther(ownerBalance)} ETH\n`);
 
   // Get current gas price for calculations
-  const feeData = await hre.ethers.provider.getFeeData();
+  const feeData = await hardhatRuntime.ethers.provider.getFeeData();
   const gasPrice = feeData.gasPrice || parseUnits("20", "gwei"); // Fallback to 20 gwei
   console.log(`Current gas price: ${formatEther(gasPrice * 1000000000n)} ETH/gas (${gasPrice.toString()} wei)\n`);
 
@@ -111,7 +117,7 @@ async function main() {
     console.log(`✅ Successfully funded ${deployerName} deployer (tx: ${fundingTx.hash})`);
 
     // Return updated balance
-    const newBalance = await hre.ethers.provider.getBalance(deployerSigner.address);
+    const newBalance = await hardhatRuntime.ethers.provider.getBalance(deployerSigner.address);
     console.log(`   New ${deployerName} deployer balance: ${formatEther(newBalance)} ETH\n`);
     
     return newBalance;
@@ -132,7 +138,7 @@ async function main() {
       console.log(`⚠️  DPS deployer nonce is ${dpsNonce}, checking for existing deployment...`);
       
       // Calculate deterministic address for nonce 0
-      const expectedDpsAddress = hre.ethers.getCreateAddress({
+      const expectedDpsAddress = hardhatRuntime.ethers.getCreateAddress({
         from: dpsSigner.address,
         nonce: 0
       });
@@ -140,14 +146,14 @@ async function main() {
       console.log(`Expected DPS address (nonce 0): ${expectedDpsAddress}`);
       
       // Check if contract exists at the expected address
-      const contractCode = await hre.ethers.provider.getCode(expectedDpsAddress);
+      const contractCode = await hardhatRuntime.ethers.provider.getCode(expectedDpsAddress);
       const contractExists = contractCode !== "0x";
       
       if (contractExists) {
         console.log("✅ Found existing DPS contract at expected address, skipping deployment");
         
         // Connect to existing contract
-        const DataPointStorageFactory = await hre.ethers.getContractFactory("DataPointStorage");
+        const DataPointStorageFactory = await hardhatRuntime.ethers.getContractFactory("DataPointStorage");
         dataPointStorage = DataPointStorageFactory.attach(expectedDpsAddress) as DataPointStorage;
         dpsAddress = expectedDpsAddress;
         skipDpsDeployment = true;
@@ -167,9 +173,9 @@ async function main() {
     if (!skipDpsDeployment) {
       console.log("⛽ Estimating DPS deployment cost...");
       
-      const DataPointStorageFactory = await hre.ethers.getContractFactory("DataPointStorage");
+      const DataPointStorageFactory = await hardhatRuntime.ethers.getContractFactory("DataPointStorage");
       const dpsDeployTx = await DataPointStorageFactory.connect(dpsSigner).getDeployTransaction();
-      const dpsGasEstimate = await hre.ethers.provider.estimateGas({
+      const dpsGasEstimate = await hardhatRuntime.ethers.provider.estimateGas({
         ...dpsDeployTx,
         from: dpsSigner.address
       });
@@ -204,17 +210,20 @@ async function main() {
     console.log("📦 Step 2: DataPointRegistry (DPR) Deployment");
     console.log("⛽ Estimating DPR deployment cost...");
     
-    // Default royalty rate
-    const royaltyRate = ROYALTY_RATE || gasPrice / 1000n; // 1/1000th of the gas price
+    // Use custom royalty rate or default to 1/1000th of gas price
+    const royaltyRate = customRoyaltyRate || gasPrice / 1000n;
+    const royaltyRateGwei = hardhatRuntime.ethers.formatUnits(royaltyRate, "gwei");
     
-    const DataPointRegistryFactory = await hre.ethers.getContractFactory("DataPointRegistry");
+    console.log(`💰 Royalty rate: ${royaltyRateGwei} GWEI (${royaltyRate.toString()} wei)`);
+    
+    const DataPointRegistryFactory = await hardhatRuntime.ethers.getContractFactory("DataPointRegistry");
     const dprDeployTx = await DataPointRegistryFactory.connect(dprSigner).getDeployTransaction(
       owner.address,     // Owner of the DPR contract
       dpsAddress,        // Address of the deployed DPS contract (real address!)
       royaltyRate        // Royalty rate
     );
     
-    const dprGasEstimate = await hre.ethers.provider.estimateGas({
+    const dprGasEstimate = await hardhatRuntime.ethers.provider.estimateGas({
       ...dprDeployTx,
       from: dprSigner.address
     });
@@ -224,7 +233,7 @@ async function main() {
     console.log(`💰 DPR deployment cost (with 10% buffer): ~${formatEther(dprCost)} ETH (${dprGasEstimate.toString()} gas)`);
     
     // Get current DPR balance and check/fund if needed
-    const currentDprBalance = await hre.ethers.provider.getBalance(dprSigner.address);
+    const currentDprBalance = await hardhatRuntime.ethers.provider.getBalance(dprSigner.address);
     await fundDeployerIfNeeded(dprSigner, currentDprBalance, dprCost, "DPR");
     
     console.log("🚀 Deploying DataPointRegistry...");
@@ -242,7 +251,7 @@ async function main() {
     console.log(`   Deployed by: ${dprSigner.address}`);
     console.log(`   Owner: ${owner.address}`);
     console.log(`   DPS Address: ${dpsAddress}`);
-    console.log(`   Royalty Rate: ${formatEther(royaltyRate)} ETH\n`);
+    console.log(`   Royalty Rate: ${royaltyRateGwei} GWEI\n`);
 
     // ========================================
     // STEP 3: Verification and Testing
@@ -252,7 +261,7 @@ async function main() {
     const royaltyRateFromRegistry = await dataPointRegistry.royaltyRate();
 
     console.log(`DPS address in registry: ${dpsFromRegistry}`);
-    console.log(`Royalty rate in registry: ${formatEther(royaltyRateFromRegistry)} ETH`);
+    console.log(`Royalty rate in registry: ${hardhatRuntime.ethers.formatUnits(royaltyRateFromRegistry, "gwei")} GWEI`);
 
     if (dpsFromRegistry === dpsAddress) {
       console.log("✅ Contract connection verified successfully!");
@@ -273,7 +282,7 @@ async function main() {
       try {
         // Verify DataPointStorage
         console.log("📋 Verifying DataPointStorage...");
-        await hre.run("verify:verify", {
+        await hardhatRuntime.run("verify:verify", {
           address: dpsAddress,
           constructorArguments: [],
         });
@@ -289,7 +298,7 @@ async function main() {
       try {
         // Verify DataPointRegistry  
         console.log("📋 Verifying DataPointRegistry...");
-        await hre.run("verify:verify", {
+        await hardhatRuntime.run("verify:verify", {
           address: dprAddress,
           constructorArguments: [
             owner.address,
@@ -308,9 +317,9 @@ async function main() {
     }
 
     // Calculate actual costs spent (get final balances)
-    const finalDpsBalance = await hre.ethers.provider.getBalance(dpsSigner.address);
-    const finalDprBalance = await hre.ethers.provider.getBalance(dprSigner.address);
-    const finalOwnerBalance = await hre.ethers.provider.getBalance(owner.address);
+    const finalDpsBalance = await hardhatRuntime.ethers.provider.getBalance(dpsSigner.address);
+    const finalDprBalance = await hardhatRuntime.ethers.provider.getBalance(dprSigner.address);
+    const finalOwnerBalance = await hardhatRuntime.ethers.provider.getBalance(owner.address);
     
     const actualDpsCost = skipDpsDeployment ? 0n : (dpsBalance - finalDpsBalance);
     const actualDprCost = dprBalance - finalDprBalance;
@@ -323,7 +332,7 @@ async function main() {
     console.log(`DataPointStorage: ${dpsAddress} ${skipDpsDeployment ? "(existing)" : "(deployed)"}`);
     console.log(`DataPointRegistry: ${dprAddress} (deployed)`);
     console.log(`Owner:            ${owner.address}`);
-    console.log(`Royalty Rate:     ${formatEther(royaltyRate)} ETH`);
+    console.log(`Royalty Rate:     ${royaltyRateGwei} GWEI`);
     console.log(`\nDeployment costs:`);
     if (!skipDpsDeployment) {
       console.log(`DPS actual:       ${formatEther(actualDpsCost)} ETH`);
@@ -399,6 +408,10 @@ async function main() {
       },
       skipped: {
         dps: skipDpsDeployment
+      },
+      royaltyRate: {
+        wei: royaltyRate.toString(),
+        gwei: royaltyRateGwei
       }
     };
 
@@ -408,11 +421,18 @@ async function main() {
   }
 }
 
+// Legacy main function for direct script execution
+async function main() {
+  return await deployWithVanity();
+}
+
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+if (require.main === module) {
+  main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}

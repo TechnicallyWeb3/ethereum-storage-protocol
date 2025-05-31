@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 
 // Import custom tasks
 import "./tasks/royalty";
+import "./tasks/deploy";
 
 dotenv.config();
 

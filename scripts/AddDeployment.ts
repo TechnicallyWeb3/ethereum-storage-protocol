@@ -24,8 +24,8 @@ interface DeploymentData {
  * Add a new deployment to the ESP deployment registry
  */
 export async function addDeployment(deploymentData: DeploymentData): Promise<void> {
-  // Skip localhost and hardhat networks
-  if (deploymentData.network === 'localhost' || deploymentData.network === 'hardhat') {
+  // Skip hardhat network
+  if (deploymentData.network === 'hardhat') {
     console.log(`🚫 Skipping deployment registry update for ${deploymentData.network} network`);
     return;
   }
