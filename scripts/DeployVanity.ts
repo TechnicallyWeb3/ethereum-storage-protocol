@@ -1,6 +1,9 @@
 import hre from "hardhat";
 import { formatEther, parseUnits, toUtf8Bytes } from "ethers";
 import { DataPointStorage, DataPointRegistry } from "../typechain-types";
+import { addDeployment, formatDeploymentData } from './AddDeployment';
+
+const ROYALTY_RATE = 0n;// parseUnits("0.001", "gwei");
 
 async function main() {
   console.log("🚀 Starting vanity deployment script...\n");
@@ -202,7 +205,7 @@ async function main() {
     console.log("⛽ Estimating DPR deployment cost...");
     
     // Default royalty rate
-    const royaltyRate = parseUnits("0.001", "ether"); // 0.001 ETH in wei
+    const royaltyRate = ROYALTY_RATE || gasPrice / 1000n; // 1/1000th of the gas price
     
     const DataPointRegistryFactory = await hre.ethers.getContractFactory("DataPointRegistry");
     const dprDeployTx = await DataPointRegistryFactory.connect(dprSigner).getDeployTransaction(
@@ -337,6 +340,41 @@ async function main() {
       console.log(`Etherscan:        Contracts verified on block explorer`);
     }
     console.log("=".repeat(60));
+
+    // ========================================
+    // STEP 4: Update Deployment Registry
+    // ========================================
+    console.log("\n📝 Updating deployment registry...");
+    
+    try {
+      const deploymentData = formatDeploymentData(
+        network,
+        {
+          address: dpsAddress,
+          deployerAddress: dpsSigner.address,
+          txHash: dataPointStorage.deploymentTransaction()?.hash
+        },
+        {
+          address: dprAddress,
+          deployerAddress: dprSigner.address,
+          txHash: dataPointRegistry.deploymentTransaction()?.hash,
+          owner: owner.address,
+          dpsAddress: dpsAddress,
+          royaltyRate: royaltyRate
+        }
+      );
+      
+      await addDeployment(deploymentData);
+      console.log(`🎯 Network '${network}' deployment registered successfully!`);
+    } catch (error: any) {
+      console.log("⚠️  Failed to update deployment registry:", error.message);
+      console.log("📝 You can manually update esp.deployments.ts with the following info:");
+      console.log(`   Network: ${network}`);
+      console.log(`   DPS: ${dpsAddress}`);
+      console.log(`   DPR: ${dprAddress}`);
+      console.log(`   Owner: ${owner.address}`);
+      console.log(`   Royalty Rate: ${royaltyRate.toString()}`);
+    }
 
     // Return deployed contracts for potential further use
     return {
