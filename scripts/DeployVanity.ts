@@ -16,11 +16,16 @@ export async function deployWithVanity(
 ) {
   console.log("🚀 Starting vanity deployment script...\n");
 
-  // Get network information
+  // Get chain information
   const network = hardhatRuntime.network.name;
-  const shouldVerify = network !== "hardhat" && network !== "localhost";
+  const chainId = hardhatRuntime.network.config.chainId;
+  if (chainId === undefined) {
+    throw new Error("ChainId is undefined, please set a chainId in your hardhat.config.ts");
+  }
+
+  const shouldVerify = chainId !== 31337 && chainId !== 1337 && !skipVerification; // 31337 is localhost 1337 is hardhat
   
-  console.log(`📡 Network: ${network}`);
+  console.log(`📡 Network: ${network} - ChainId: ${chainId}`);
   console.log(`🔍 Contract verification: ${shouldVerify ? "ENABLED" : "DISABLED (local network)"}\n`);
 
   // Get signers - DPS uses signer(0), DPR uses signer(1)
@@ -359,7 +364,7 @@ export async function deployWithVanity(
     
     try {
       const deploymentData = formatDeploymentData(
-        network,
+        chainId,
         {
           address: dpsAddress,
           deployerAddress: dpsSigner.address,

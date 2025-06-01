@@ -14,8 +14,8 @@
  */
 
 export const espDeployments = {
-  networks: {
-    sepolia: {
+  chains: {
+    11155111: {
       dps: {
         contractAddress: '0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB',
         deployerAddress: '0xA717E0c570c86387a023ecf95805e2416e6d50EF',
@@ -33,7 +33,7 @@ export const espDeployments = {
           royaltyRate: '1000000000000000'
         }
       }
-    }
+    }  
   }
 };
 

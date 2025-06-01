@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 interface DeploymentData {
-  network: string;
+  chainId: number;
   dps: {
     contractAddress: string;
     deployerAddress: string;
@@ -24,9 +24,9 @@ interface DeploymentData {
  * Add a new deployment to the ESP deployment registry
  */
 export async function addDeployment(deploymentData: DeploymentData): Promise<void> {
-  // Skip hardhat network
-  if (deploymentData.network === 'hardhat') {
-    console.log(`🚫 Skipping deployment registry update for ${deploymentData.network} network`);
+  // Skip hardhat chain
+  if (deploymentData.chainId === 31337) {
+    console.log(`🚫 Skipping deployment registry update for chainId ${deploymentData.chainId}`);
     return;
   }
 
@@ -38,8 +38,8 @@ export async function addDeployment(deploymentData: DeploymentData): Promise<voi
     
     const timestamp = new Date().toISOString();
     
-    // Build the new network entry
-    const networkEntry = `    ${deploymentData.network}: {
+    // Build the new chain entry
+    const chainEntry = `    ${deploymentData.chainId}: {
       dps: {
         contractAddress: '${deploymentData.dps.contractAddress}',
         deployerAddress: '${deploymentData.dps.deployerAddress}',
@@ -59,65 +59,65 @@ export async function addDeployment(deploymentData: DeploymentData): Promise<voi
       }
     }`;
 
-    // Check if network already exists
-    const networkRegex = new RegExp(`    ${deploymentData.network}: {[^}]*(?:}[^}]*)*}`, 's');
+    // Check if chain already exists
+    const chainRegex = new RegExp(`    ${deploymentData.chainId}: {[^}]*(?:}[^}]*)*}`, 's');
     
-    if (registryContent.match(networkRegex)) {
-      // Update existing network
-      registryContent = registryContent.replace(networkRegex, networkEntry);
-      console.log(`📝 Updated existing ${deploymentData.network} deployment in registry`);
+    if (registryContent.match(chainRegex)) {
+      // Update existing chain
+      registryContent = registryContent.replace(chainRegex, chainEntry);
+      console.log(`📝 Updated existing ${deploymentData.chainId} deployment in registry`);
     } else {
-      // Find the insertion point within the networks object
-      // Look for the closing brace of the networks object
-      const networksPattern = /networks:\s*{([^}]*(?:}[^}]*)*)}[^}]*$/s;
-      const match = registryContent.match(networksPattern);
+      // Find the insertion point within the chains object
+      // Look for the closing brace of the chains object
+      const chainsPattern = /chains:\s*{([^}]*(?:}[^}]*)*)}[^}]*$/s;
+      const match = registryContent.match(chainsPattern);
       
       if (match) {
-        // Find where the networks object closes
-        const networksStart = registryContent.indexOf('networks: {');
-        const networksOpenBrace = registryContent.indexOf('{', networksStart + 'networks: '.length);
+        // Find where the chains object closes
+        const chainsStart = registryContent.indexOf('chains: {');
+        const chainsOpenBrace = registryContent.indexOf('{', chainsStart + 'chains: '.length);
         
-        // Find the matching closing brace for networks
+        // Find the matching closing brace for chains
         let braceCount = 1;
-        let i = networksOpenBrace + 1;
-        let networksEnd = -1;
+        let i = chainsOpenBrace + 1;
+        let chainsEnd = -1;
         
         while (i < registryContent.length && braceCount > 0) {
           if (registryContent[i] === '{') braceCount++;
           if (registryContent[i] === '}') braceCount--;
           if (braceCount === 0) {
-            networksEnd = i;
+            chainsEnd = i;
             break;
           }
           i++;
         }
         
-        if (networksEnd !== -1) {
-          const beforeInsert = registryContent.substring(0, networksEnd);
-          const afterInsert = registryContent.substring(networksEnd);
+        if (chainsEnd !== -1) {
+          const beforeInsert = registryContent.substring(0, chainsEnd);
+          const afterInsert = registryContent.substring(chainsEnd);
           
-          // Check if we need a comma (if there are existing networks)
+          // Check if we need a comma (if there are existing chains)
           const hasExistingNetworks = beforeInsert.includes(': {') && 
                                      beforeInsert.trim().endsWith('}') && 
-                                     !beforeInsert.trim().endsWith('networks: {');
+                                     !beforeInsert.trim().endsWith('chains: {');
           
           if (hasExistingNetworks) {
-            // Insert comma immediately after the last closing brace before inserting new network
+            // Insert comma immediately after the last closing brace before inserting new chain
             const lastBraceIndex = beforeInsert.lastIndexOf('}');
             const beforeLastBrace = beforeInsert.substring(0, lastBraceIndex + 1);
             const afterLastBrace = beforeInsert.substring(lastBraceIndex + 1);
             
-            registryContent = beforeLastBrace + ',\n' + networkEntry + '\n  ' + afterLastBrace + afterInsert;
+            registryContent = beforeLastBrace + ',\n' + chainEntry + '\n  ' + afterLastBrace + afterInsert;
           } else {
-            registryContent = beforeInsert + '\n' + networkEntry + '\n  ' + afterInsert;
+            registryContent = beforeInsert + '\n' + chainEntry + '\n  ' + afterInsert;
           }
           
-          console.log(`📝 Added new ${deploymentData.network} deployment to registry`);
+          console.log(`📝 Added new ${deploymentData.chainId} deployment to registry`);
         } else {
-          throw new Error('Could not find networks closing brace');
+          throw new Error('Could not find chains closing brace');
         }
       } else {
-        throw new Error('Could not find networks object in registry file');
+        throw new Error('Could not find chains object in registry file');
       }
     }
     
@@ -135,7 +135,7 @@ export async function addDeployment(deploymentData: DeploymentData): Promise<voi
  * Quick helper to format deployment data from deploy script results
  */
 export function formatDeploymentData(
-  network: string,
+  chainId: number,
   dpsResult: { address: string; deployerAddress: string; txHash?: string },
   dprResult: { 
     address: string; 
@@ -147,7 +147,7 @@ export function formatDeploymentData(
   }
 ): DeploymentData {
   return {
-    network,
+    chainId,
     dps: {
       contractAddress: dpsResult.address,
       deployerAddress: dpsResult.deployerAddress,

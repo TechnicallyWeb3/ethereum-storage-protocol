@@ -60,18 +60,22 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
+      chainId: 31337,
       accounts: espDeployerKeys,
     },
     sepolia: {
       url: "https://ethereum-sepolia-rpc.publicnode.com",
+      chainId: 11155111,
       accounts: espDeployerKeys,
     },
     mainnet: {
       url: "https://ethereum-rpc.publicnode.com",
+      chainId: 1,
       accounts: espDeployerKeys,
     },
     polygon: {
       url: "https://polygon-bor-rpc.publicnode.com",
+      chainId: 137,
       accounts: espDeployerKeys,
     },
   },

@@ -1,6 +1,6 @@
 {
   "name": "@tw3/esp",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -25,22 +25,25 @@
       "import": "./dist/esm/deployments.js",
       "require": "./dist/cjs/deployments.js",
       "types": "./dist/types/deployments.d.ts"
-    }
+    },
+    "./contracts/*": "./contracts/*"
   },
   "files": [
     "dist/",
     "README.md",
     "LICENSE",
     "LLM_CONTEXT.md",
-    "TIMESTAMP.md"
+    "TIMESTAMP.md",
+    "contracts/DataPointRegistry.sol",
+    "contracts/DataPointStorage.sol",
+    "contracts/interfaces/"
   ],
   "scripts": {
     "test": "npx hardhat test",
-    "build": "npm run clean && npm run build:types && npm run build:cjs && npm run build:esm && npm run copy:contracts",
+    "build": "npm run clean && npm run build:types && npm run build:cjs && npm run build:esm",
     "build:types": "tsc --project tsconfig.build.json --declaration --emitDeclarationOnly --outDir dist/types",
     "build:cjs": "tsc --project tsconfig.build.json --module commonjs --outDir dist/cjs",
     "build:esm": "tsc --project tsconfig.build.json --module esnext --outDir dist/esm",
-    "copy:contracts": "ts-node scripts/copy-contracts.ts",
     "clean": "rimraf dist",
     "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run build",

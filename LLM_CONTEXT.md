@@ -1,313 +1,323 @@
-# LLM Integration Preprompt for @tw3/esp
+# Ethereum Storage Protocol (ESP) - LLM Context Guide
 
-> **For AI Assistants**: This file contains comprehensive context for helping developers integrate this package. Please use this information when assisting with package integration.
+**Version:** 0.3.3  
+**Package:** `ethereum-storage` or `@tw3/esp`  
+**License:** AGPL-3.0
 
-## Package Overview
-You are helping a developer integrate the Ethereum Storage Protocol (ESP) into their project. ESP provides decentralized, content-addressed storage with economic incentives. This package (`@tw3/esp` or `ethereum-storage`) contains contract interfaces, TypeScript types, deployment information, and utilities.
+## Project Summary
 
-## Package Installation
+ESP is a decentralized storage protocol built on Ethereum that provides:
+- **Immutable, content-addressed storage** via DataPointStorage contract
+- **Economic incentive layer** via DataPointRegistry contract with publisher royalties
+- **TypeScript-first integration** with full TypeChain types and utilities
+- **Production-ready contracts** deployed on multiple networks
 
-```bash
-# Install the ESP package
-npm install @tw3/esp
-# OR
-npm install ethereum-storage
+## Architecture
+
+```
+DataPointRegistry (Economic Layer)
+        ↓ delegates storage to
+DataPointStorage (Storage Layer)
 ```
 
-## Key Components Available
+## Package Structure
 
-### 1. Contract Interfaces & Types
+### Main Exports (`ethereum-storage`)
 ```typescript
-// Main contract types
-import type { 
-  DataPointRegistry, 
-  DataPointStorage,
-  IDataPointRegistry,
-  IDataPointStorage 
-} from '@tw3/esp';
+// Contract types & factories (TypeChain generated)
+import {
+  DataPointRegistry, DataPointRegistry__factory,
+  DataPointStorage, DataPointStorage__factory,
+  IDataPointRegistry, IDataPointRegistry__factory,
+  IDataPointStorage, IDataPointStorage__factory
+} from 'ethereum-storage';
 
-// Contract factories for connection/deployment
+// Deployment utilities
+import {
+  espDeployments, loadContract, getContractAddress,
+  getDeploymentInfo, getSupportedChainIds
+} from 'ethereum-storage';
+
+// All TypeScript types
+import type {
+  ContractTransaction, ContractTransactionResponse,
+  BigNumberish, BytesLike, Signer, Provider,
+  BaseOverrides, PayableOverrides, Overrides
+} from 'ethereum-storage';
+```
+
+### Subpath Exports
+```typescript
+// Contract ABIs and utilities
+import { 
+  DataPointRegistryABI, DataPointStorageABI,
+  getContractFactory, ContractNames 
+} from 'ethereum-storage/contracts';
+
+// Deployment-specific utilities
+import {
+  espDeployments, loadContract, getContractAddress
+} from 'ethereum-storage/deployments';
+
+// Type-only imports
+import type {
+  DataPointRegistry, DataPointStorage,
+  IDataPointRegistry, IDataPointStorage
+} from 'ethereum-storage/types';
+```
+
+## Contract Interfaces
+
+### DataPointStorage (Core Storage Layer)
+```typescript
+interface IDataPointStorage {
+  // Write immutable data, returns content address
+  writeDataPoint(data: BytesLike): Promise<ContractTransaction>;
+  
+  // Read data by content address
+  readDataPoint(address: string): Promise<string>;
+  
+  // Calculate content address without writing
+  calculateAddress(data: BytesLike): Promise<string>;
+  
+  // Get size of stored data
+  dataPointSize(address: string): Promise<BigNumber>;
+}
+```
+
+### DataPointRegistry (Economic Layer)
+```typescript
+interface IDataPointRegistry {
+  // Register data with publisher royalties
+  registerDataPoint(
+    data: BytesLike, 
+    publisher: string,
+    overrides?: PayableOverrides
+  ): Promise<ContractTransaction>;
+  
+  // Get royalty cost for accessing data
+  getDataPointRoyalty(address: string): Promise<BigNumber>;
+  
+  // Pay royalty and read data
+  readDataPoint(
+    address: string,
+    overrides?: PayableOverrides
+  ): Promise<ContractTransaction>;
+  
+  // Collect earned royalties
+  collectRoyalties(
+    amount: BigNumberish,
+    withdrawTo: string
+  ): Promise<ContractTransaction>;
+}
+```
+
+## Working with Deployments
+
+### Chain ID System
+ESP uses standard Ethereum chain IDs:
+- **Sepolia Testnet:** 11155111
+- **Ethereum Mainnet:** 1
+- **Polygon:** 137
+- **Hardhat/Local:** 31337
+
+### Deployment Utilities
+
+```typescript
+import { 
+  getSupportedChainIds, getContractAddress, 
+  loadContract, getDeploymentInfo 
+} from 'ethereum-storage';
+
+// Get all supported networks
+const chainIds = getSupportedChainIds(); // [11155111]
+
+// Get contract addresses
+const registryAddr = getContractAddress(11155111, 'dpr');
+const storageAddr = getContractAddress(11155111, 'dps');
+
+// Get full deployment info
+const deployInfo = getDeploymentInfo(11155111, 'dpr');
+/* Returns: {
+  contractAddress: '0x...',
+  deployerAddress: '0x...',
+  txHash: '0x...',
+  deployedAt: '2025-05-31T18:59:12.000Z',
+  constructors: { ... }
+} */
+
+// Load contract instances directly
+const registry = loadContract(11155111, 'dpr', provider);
+const storage = loadContract(11155111, 'dps', signer);
+```
+
+## Complete Integration Examples
+
+### Basic Usage Pattern
+```typescript
+import { ethers } from 'ethers';
 import { 
   DataPointRegistry__factory,
-  DataPointStorage__factory,
-  IDataPointRegistry__factory,
-  IDataPointStorage__factory
-} from '@tw3/esp';
+  loadContract,
+  getContractAddress 
+} from 'ethereum-storage';
+
+const provider = new ethers.JsonRpcProvider('YOUR_RPC_URL');
+const signer = new ethers.Wallet('PRIVATE_KEY', provider);
+const chainId = 11155111; // Sepolia
+
+// Method 1: Manual connection
+const registryAddr = getContractAddress(chainId, 'dpr');
+const registry = DataPointRegistry__factory.connect(registryAddr, signer);
+
+// Method 2: Helper function (recommended)
+const registry2 = loadContract(chainId, 'dpr', signer);
+
+// Store data with royalties
+const data = ethers.toUtf8Bytes("Hello ESP!");
+const tx = await registry.registerDataPoint(data, signer.address);
+const receipt = await tx.wait();
+
+// Extract data point address from event
+const event = receipt.logs.find(log => 
+  log.topics[0] === registry.interface.getEventTopic('DataPointRegistered')
+);
+const dataPointAddress = event.topics[1];
+
+// Read data (free from storage layer)
+const storage = loadContract(chainId, 'dps', provider);
+const storedData = await storage.readDataPoint(dataPointAddress);
 ```
 
-### 2. Contract ABIs
+### Advanced Usage with Royalties
 ```typescript
-// Access contract ABIs directly
-import {
-  DataPointRegistryABI,
-  DataPointStorageABI,
-  IDataPointRegistryABI,
-  IDataPointStorageABI
-} from '@tw3/esp/contracts';
+import { parseEther, formatUnits } from 'ethers';
+import { loadContract, getContractAddress } from 'ethereum-storage';
+
+const registry = loadContract(11155111, 'dpr', signer);
+
+// Check royalty cost before reading
+const royaltyCost = await registry.getDataPointRoyalty(dataPointAddress);
+console.log(`Royalty: ${formatUnits(royaltyCost, 'ether')} ETH`);
+
+// Read data with royalty payment
+const readTx = await registry.readDataPoint(dataPointAddress, {
+  value: royaltyCost
+});
+await readTx.wait();
+
+// Publisher collects royalties
+const balance = await provider.getBalance(publisherAddress);
+await registry.collectRoyalties(balance, publisherAddress);
 ```
 
-### 3. Deployment Information
+### Working with ABIs Directly
 ```typescript
-// Deployment utilities and addresses
-import {
-  espDeployments,
-  getContractAddress,
-  getDeploymentInfo,
-  getSupportedNetworks
-} from '@tw3/esp/deployments';
+import { DataPointRegistryABI, DataPointStorageABI } from 'ethereum-storage/contracts';
+import { ethers } from 'ethers';
+
+// Create contract instance with ABI
+const registry = new ethers.Contract(
+  registryAddress, 
+  DataPointRegistryABI, 
+  signer
+);
+
+// Use for external tools (Wagmi, Web3.js, etc.)
+const wagmiConfig = {
+  address: registryAddress,
+  abi: DataPointRegistryABI,
+  // ...
+};
 ```
 
-### 4. TypeScript Types
+## Type Safety Guidelines
+
+### Contract Type Assertions
 ```typescript
-// Useful types for development
-import type {
-  ContractTransaction,
-  ContractTransactionResponse,
-  BigNumberish,
-  BytesLike,
-  Signer,
-  Provider,
-  Overrides,
-  BaseOverrides,
-  NonPayableOverrides,
-  PayableOverrides
-} from '@tw3/esp/types';
+import type { DataPointRegistry, DataPointStorage } from 'ethereum-storage';
+
+// Type-safe contract instances
+const registry = loadContract(chainId, 'dpr', signer) as DataPointRegistry;
+const storage = loadContract(chainId, 'dps', provider) as DataPointStorage;
+
+// Type-safe transaction handling
+import type { ContractTransaction } from 'ethereum-storage';
+const tx: ContractTransaction = await registry.registerDataPoint(data, publisher);
 ```
 
-## Current Network Deployments
+### Override Types
+```typescript
+import type { PayableOverrides, Overrides } from 'ethereum-storage';
 
-### Sepolia Testnet
-- **DataPointStorage (DPS)**: `0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB`
-- **DataPointRegistry (DPR)**: `0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE`
+// For payable functions
+const payableOptions: PayableOverrides = {
+  value: parseEther('0.01'),
+  gasLimit: 500000
+};
+
+// For non-payable functions  
+const options: Overrides = {
+  gasLimit: 300000
+};
+```
 
 ## Common Integration Patterns
 
-### 1. Connecting to Deployed Contracts
-```typescript
-import { DataPointRegistry__factory, DataPointStorage__factory, getContractAddress } from '@tw3/esp';
-import { ethers } from 'ethers';
-
-// Setup provider and signer
-const provider = new ethers.JsonRpcProvider('YOUR_RPC_URL');
-const signer = new ethers.Wallet('YOUR_PRIVATE_KEY', provider);
-
-// Get contract addresses for your network
-const dpsAddress = getContractAddress('sepolia', 'dps');
-const dprAddress = getContractAddress('sepolia', 'dpr');
-
-// Connect to contracts
-const dataPointStorage = DataPointStorage__factory.connect(dpsAddress, signer);
-const dataPointRegistry = DataPointRegistry__factory.connect(dprAddress, signer);
-```
-
-### 2. Storing Data with Royalties
-```typescript
-// Register new data point with publisher royalties
-const data = ethers.toUtf8Bytes("Your data content here");
-const publisherAddress = signer.address;
-
-try {
-  const tx = await dataPointRegistry.registerDataPoint(data, publisherAddress);
-  const receipt = await tx.wait();
-  console.log('Data registered successfully:', receipt.hash);
-} catch (error) {
-  console.error('Registration failed:', error);
-}
-```
-
-### 3. Accessing Existing Data
-```typescript
-// Calculate data point address
-const dataBytes = ethers.toUtf8Bytes("Your data content");
-const dataPointAddress = await dataPointStorage.calculateAddress(dataBytes);
-
-// Check if data exists
-const dataSize = await dataPointStorage.dataPointSize(dataPointAddress);
-if (dataSize > 0) {
-  // Data exists, check royalty cost
-  const royaltyCost = await dataPointRegistry.getDataPointRoyalty(dataPointAddress);
-  
-  // Access data (pay royalty if required)
-  const tx = await dataPointRegistry.registerDataPoint(dataBytes, ethers.ZeroAddress, {
-    value: royaltyCost
-  });
-  await tx.wait();
-  
-  // Read the data
-  const storedData = await dataPointStorage.readDataPoint(dataPointAddress);
-  console.log('Retrieved data:', ethers.toUtf8String(storedData));
-}
-```
-
-### 4. Publisher Operations
-```typescript
-// Update publisher address for a data point
-const newPublisherAddress = "0x...";
-await dataPointRegistry.updatePublisherAddress(dataPointAddress, newPublisherAddress);
-
-// Collect earned royalties
-const availableBalance = await dataPointRegistry.publisherBalances(signer.address);
-if (availableBalance > 0) {
-  await dataPointRegistry.collectRoyalties(availableBalance, signer.address);
-}
-```
-
-### 5. Using with Different Networks
-```typescript
-// Get all supported networks
-const networks = getSupportedNetworks();
-console.log('ESP is deployed on:', networks);
-
-// Get deployment info for a specific network
-const sepoliaDeployment = getDeploymentInfo('sepolia', 'dpr');
-console.log('Deployment details:', sepoliaDeployment);
-```
-
-## Contract Interface Reference
-
-### DataPointStorage (DPS)
-```typescript
-interface IDataPointStorage {
-  // Write new data point
-  writeDataPoint(data: BytesLike): Promise<ContractTransactionResponse>;
-  
-  // Read existing data
-  readDataPoint(address: string): Promise<string>;
-  
-  // Calculate address for data
-  calculateAddress(data: BytesLike): Promise<string>;
-  
-  // Get data size
-  dataPointSize(address: string): Promise<bigint>;
-}
-```
-
-### DataPointRegistry (DPR)
-```typescript
-interface IDataPointRegistry {
-  // Register data with royalties
-  registerDataPoint(data: BytesLike, publisher: string, overrides?: PayableOverrides): Promise<ContractTransactionResponse>;
-  
-  // Get royalty cost for data access
-  getDataPointRoyalty(address: string): Promise<bigint>;
-  
-  // Collect earned royalties
-  collectRoyalties(amount: BigNumberish, to: string): Promise<ContractTransactionResponse>;
-  
-  // Update publisher address
-  updatePublisherAddress(address: string, newPublisher: string): Promise<ContractTransactionResponse>;
-  
-  // Check publisher balance
-  publisherBalances(publisher: string): Promise<bigint>;
-}
-```
-
-## Best Practices
-
-### 1. Error Handling
+### Error Handling
 ```typescript
 try {
-  const tx = await dataPointRegistry.registerDataPoint(data, publisher);
+  const tx = await registry.registerDataPoint(data, publisher);
   await tx.wait();
 } catch (error) {
-  if (error.code === 'INSUFFICIENT_FUNDS') {
-    console.error('Insufficient ETH for royalty payment');
-  } else if (error.message.includes('Data already exists')) {
-    console.error('This data has already been stored');
-  } else {
-    console.error('Transaction failed:', error);
+  if (error.reason === 'InsufficientRoyaltyPayment') {
+    // Handle specific contract error
   }
+  // Handle other errors
 }
 ```
 
-### 2. Gas Optimization
+### Event Listening
 ```typescript
-// Estimate gas before transaction
-const gasEstimate = await dataPointRegistry.registerDataPoint.estimateGas(data, publisher);
-console.log('Estimated gas:', gasEstimate.toString());
+// Listen for data point registrations
+registry.on('DataPointRegistered', (dataPointAddress, publisher, event) => {
+  console.log(`New data point: ${dataPointAddress} by ${publisher}`);
+});
 
-// Use gas limit with buffer
-const tx = await dataPointRegistry.registerDataPoint(data, publisher, {
-  gasLimit: gasEstimate * 120n / 100n // 20% buffer
+// Listen for royalty payments
+registry.on('RoyaltiesPaid', (dataPointAddress, payer, amount, event) => {
+  console.log(`Royalty paid: ${formatUnits(amount, 'ether')} ETH`);
 });
 ```
 
-### 3. Data Validation
+### Multi-chain Support
 ```typescript
-// Validate data before storing
-if (data.length === 0) {
-  throw new Error('Cannot store empty data');
-}
+const networks = [1, 11155111, 137]; // Mainnet, Sepolia, Polygon
 
-if (data.length > 10000) {
-  console.warn('Large data will consume significant gas');
-}
+const registries = networks.map(chainId => {
+  const provider = getProvider(chainId); // Your provider logic
+  return {
+    chainId,
+    registry: loadContract(chainId, 'dpr', provider)
+  };
+}).filter(({ registry }) => registry !== undefined);
 ```
 
-### 4. Address Validation
-```typescript
-// Validate Ethereum addresses
-if (!ethers.isAddress(publisherAddress)) {
-  throw new Error('Invalid publisher address');
-}
-```
+## Key Implementation Notes
 
-## Common Use Cases
+1. **Content Addressing**: ESP uses deterministic addresses based on keccak256(data)
+2. **Gas Optimization**: Storage layer is append-only, registry handles all logic
+3. **Royalty Model**: Publishers set rates, protocol collects fees automatically  
+4. **Upgradeability**: Registry is upgradeable, storage layer is immutable
+5. **Security**: Full reentrancy protection, comprehensive access controls
 
-### 1. Decentralized File Storage
-Store file hashes or small files directly on-chain with content addressing.
+## Quick Reference
 
-### 2. Data Marketplaces
-Create marketplaces where data publishers earn royalties from data access.
-
-### 3. Content Distribution
-Distribute content with built-in economic incentives for publishers.
-
-### 4. Data Provenance
-Track data ownership and access history through the registry.
-
-## Troubleshooting
-
-### Common Issues:
-1. **"Contract not deployed"** - Check network and contract addresses
-2. **"Insufficient royalty payment"** - Get royalty cost first using `getDataPointRoyalty()`
-3. **"Data already exists"** - Check if data point already exists before writing
-4. **"Invalid signer"** - Ensure signer has sufficient ETH and proper permissions
-
-### Debugging:
-```typescript
-// Check contract deployment
-const code = await provider.getCode(contractAddress);
-if (code === '0x') {
-  console.error('Contract not deployed at this address');
-}
-
-// Check network
-const network = await provider.getNetwork();
-console.log('Connected to network:', network.name, network.chainId);
-```
-
-## Version Compatibility
-- **ESP Package**: v0.2.0+
-- **Ethers.js**: v6.x compatible
-- **Node.js**: v16+ recommended
-- **TypeScript**: v4.5+ for full type support
-
-## Support Resources
-- GitHub Repository: https://github.com/TechnicallyWeb3/ethereum-storage-protocol
-- Package Documentation: README.md in the package
-- Contract Interfaces: Available in `/contracts` export path
-
----
-
-## AI Assistant Guidelines
-When helping developers integrate this package, always:
-1. Check their network compatibility (currently Sepolia testnet)
-2. Ensure proper error handling for contract interactions
-3. Validate addresses and data before transactions
-4. Suggest gas estimation for cost-sensitive operations
-5. Provide complete, working code examples
-6. Explain the economic model (royalties) when relevant
-
-## TW3 Package Standard
-This `LLM_CONTEXT.md` file follows the TechnicallyWeb3 standard for AI-assisted development. Look for this file in other `@tw3/*` packages for integration context. 
+| Function | Contract | Purpose | Payable |
+|----------|----------|---------|---------|
+| `writeDataPoint()` | Storage | Store data directly | No |
+| `registerDataPoint()` | Registry | Store + set royalties | Yes |
+| `readDataPoint()` | Storage | Read (free) | No |
+| `readDataPoint()` | Registry | Read + pay royalty | Yes |
+| `getDataPointRoyalty()` | Registry | Check royalty cost | No |
+| `collectRoyalties()` | Registry | Withdraw earnings | No | 

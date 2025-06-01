@@ -24,7 +24,13 @@ export {
 export * from './contracts';
 
 // Export deployment information
-export { espDeployments, default as deployments } from '../esp.deployments';
+export {
+  espDeployments,
+  loadContract,
+  getContractAddress,
+  getDeploymentInfo,
+  getSupportedChainIds
+} from './deployments';
 
 // Re-export types for convenience
 export * from './types'; 

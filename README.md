@@ -38,7 +38,8 @@ import {
   DataPointRegistry__factory, 
   DataPointStorage__factory,
   espDeployments,
-  getContractAddress 
+  getContractAddress,
+  loadContract 
 } from 'ethereum-storage';
 // or from '@tw3/esp'
 
@@ -48,13 +49,18 @@ import { ethers } from 'ethers';
 const provider = new ethers.JsonRpcProvider('YOUR_RPC_URL');
 const signer = new ethers.Wallet('YOUR_PRIVATE_KEY', provider);
 
-// Get contract addresses for your network
-const dpsAddress = getContractAddress('sepolia', 'dps');
-const dprAddress = getContractAddress('sepolia', 'dpr');
+// Method 1: Get contract addresses by chainId
+const chainId = 11155111; // Sepolia
+const dpsAddress = getContractAddress(chainId, 'dps');
+const dprAddress = getContractAddress(chainId, 'dpr');
 
-// Connect to contracts
+// Connect to contracts manually
 const dataPointStorage = DataPointStorage__factory.connect(dpsAddress, signer);
 const dataPointRegistry = DataPointRegistry__factory.connect(dprAddress, signer);
+
+// Method 2: Use loadContract helper (automatically connects)
+const dataPointStorage2 = loadContract(chainId, 'dps', signer);
+const dataPointRegistry2 = loadContract(chainId, 'dpr', signer);
 
 // Store data with royalties
 const data = ethers.toUtf8Bytes("Hello, ESP!");
@@ -86,7 +92,8 @@ import {
   espDeployments,
   getContractAddress,
   getDeploymentInfo,
-  getSupportedNetworks
+  getSupportedChainIds,
+  loadContract
 } from 'ethereum-storage/deployments';
 
 // TypeScript types
@@ -144,11 +151,35 @@ User/DApp → DataPointRegistry → DataPointStorage
 
 ## Deployed Networks
 
-The ESP contracts are currently deployed on:
+The ESP contracts are deployed on the following networks (identified by chainId):
 
-- **Sepolia Testnet**: 
-  - DataPointStorage: `0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB`
-  - DataPointRegistry: `0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE`
+### Sepolia Testnet (chainId: 11155111)
+- **DataPointStorage**: `0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB`
+- **DataPointRegistry**: `0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE`
+
+### Working with ChainIds
+
+```typescript
+import { getSupportedChainIds, getContractAddress } from 'ethereum-storage';
+
+// Get all supported chain IDs
+const supportedChains = getSupportedChainIds();
+console.log(supportedChains); // [11155111]
+
+// Get contract address for specific chain
+const sepoliaRegistry = getContractAddress(11155111, 'dpr');
+const sepoliaStorage = getContractAddress(11155111, 'dps');
+
+// Load contracts directly
+const registry = loadContract(11155111, 'dpr', provider);
+const storage = loadContract(11155111, 'dps', provider);
+```
+
+### Common Chain IDs
+- **Ethereum Mainnet**: 1
+- **Sepolia Testnet**: 11155111
+- **Polygon**: 137
+- **Hardhat/Localhost**: 31337
 
 ## Security Status
 
