@@ -36,4 +36,5 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-ANTI_THEFT_MONITORING.md
+# AI Agent files, may accidentally contain sensitive data
+/agent-files

@@ -109,5 +109,5 @@ tests/
 cache/
 artifacts/
 
-# Author-only documentation
-ANTI_THEFT_MONITORING.md 
+# AI Agent files
+/agent-files

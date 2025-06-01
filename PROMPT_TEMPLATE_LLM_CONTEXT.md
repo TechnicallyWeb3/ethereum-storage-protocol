@@ -1,6 +1,6 @@
 # LLM Context Generation Prompt Template
 
-Use this prompt to create comprehensive LLM context files for coding projects:
+Use this prompt to create comprehensive LLM context files for web3 coding projects:
 
 ---
 
