@@ -1,25 +1,25 @@
 {
   "name": "@tw3/esp",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/types/index.d.ts"
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./contracts": {
-      "import": "./dist/esm/contracts/index.js",
-      "require": "./dist/cjs/contracts/index.js",
-      "types": "./dist/types/contracts/index.d.ts"
+      "import": "./dist/esm/src/contracts/index.js",
+      "require": "./dist/cjs/src/contracts/index.js",
+      "types": "./dist/types/src/contracts/index.d.ts"
     },
     "./types": {
-      "import": "./dist/esm/types/index.js",
-      "require": "./dist/cjs/types/index.js",
-      "types": "./dist/types/types/index.d.ts"
+      "import": "./dist/esm/src/types/index.js",
+      "require": "./dist/cjs/src/types/index.js",
+      "types": "./dist/types/src/types/index.d.ts"
     },
     "./deployments": {
       "import": "./dist/esm/deployments.js",
