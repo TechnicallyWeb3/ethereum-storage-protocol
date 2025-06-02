@@ -208,11 +208,13 @@ function _getDeploymentsFilePath(): string {
   // The compiled files will be in dist/cjs/src/ or dist/esm/src/
   // The esp.deployments.ts file is at the package root
   // So we need to go up from dist/cjs/src/ or dist/esm/src/ to reach the root
-  const relativePath = path.join(__dirname, '..', 'esp.deployments.ts');
+  // const relativePath = path.join(__dirname, '..', 'esp.deployments.ts');
   
-  if (fs.existsSync(relativePath)) {
-    return relativePath;
-  }
+  // if (fs.existsSync(relativePath)) {
+  //   return relativePath;
+  // }
+
+  // all build files are js, ts is only in the package root, which won't change via this script
 
   const relativePathJs = path.join(__dirname, '..', 'esp.deployments.js');
   
@@ -230,7 +232,7 @@ function _getDeploymentsFilePath(): string {
   //   currentDir = path.dirname(currentDir);
   // }
   
-  throw new Error('Could not find esp.deployments.ts or esp.deployments.js file');
+  throw new Error('Could not find esp.deployments.js file');
 }
 
 function _writeDeploymentsFile(filePath: string, deployments: any): void {
