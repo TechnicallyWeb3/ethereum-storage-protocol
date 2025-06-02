@@ -200,8 +200,53 @@ function _getDeployments() {
     return _modifiedDeployments;
   }
   
-  // Otherwise load from the original file
-  return require('../esp.deployments').espDeployments;
+  try {
+    // Try to load from the original file
+    const espDeployments = require('../esp.deployments').espDeployments;
+    return espDeployments;
+  } catch (error) {
+    // If that fails, check for a deployments directory
+    try {
+      const deploymentsDir = path.join(__dirname, '..', 'deployments');
+      const localhostPath = path.join(deploymentsDir, 'localhost.json');
+      
+      if (fs.existsSync(localhostPath)) {
+        const localhostDeployments = JSON.parse(fs.readFileSync(localhostPath, 'utf8'));
+        
+        // Convert to the expected format if needed
+        if (!localhostDeployments.chains) {
+          return {
+            chains: {
+              [localhostDeployments.chainId || 31337]: {
+                dps: {
+                  contractAddress: localhostDeployments.dps,
+                  deployerAddress: localhostDeployments.owner || '0x0000000000000000000000000000000000000000',
+                  deployedAt: new Date().toISOString()
+                },
+                dpr: {
+                  contractAddress: localhostDeployments.dpr,
+                  deployerAddress: localhostDeployments.owner || '0x0000000000000000000000000000000000000000',
+                  deployedAt: new Date().toISOString(),
+                  constructors: {
+                    ownerAddress: localhostDeployments.owner || '0x0000000000000000000000000000000000000000',
+                    dpsAddress: localhostDeployments.dps,
+                    royaltyRate: localhostDeployments.royaltyRate || '100000000000000'
+                  }
+                }
+              }
+            }
+          };
+        }
+        
+        return localhostDeployments;
+      }
+    } catch (innerError) {
+      console.error('Error loading localhost deployments:', innerError);
+    }
+    
+    // If all else fails, return an empty deployments object
+    return { chains: {} };
+  }
 }
 
 function _getDeploymentsFilePath(): string {
@@ -220,46 +265,104 @@ function _getDeploymentsFilePath(): string {
     return relativePathJs;
   }
   
-  // // Fallback: try to find it by walking up the directory tree
-  // let currentDir = __dirname;
-  // for (let i = 0; i < 5; i++) { // Limit search depth
-  //   const potentialPath = path.join(currentDir, 'esp.deployments.ts');
-  //   if (fs.existsSync(potentialPath)) {
-  //     return potentialPath;
-  //   }
-  //   currentDir = path.dirname(currentDir);
-  // }
+  // Fallback: try to find it by walking up the directory tree
+  let currentDir = __dirname;
+  for (let i = 0; i < 5; i++) { // Limit search depth
+    const potentialPath = path.join(currentDir, 'esp.deployments.ts');
+    if (fs.existsSync(potentialPath)) {
+      return potentialPath;
+    }
+    
+    const potentialPathJs = path.join(currentDir, 'esp.deployments.js');
+    if (fs.existsSync(potentialPathJs)) {
+      return potentialPathJs;
+    }
+    
+    currentDir = path.dirname(currentDir);
+  }
   
-  throw new Error('Could not find esp.deployments.ts or esp.deployments.js file');
+  // If we can't find the file, create a deployments directory and file
+  const deploymentsDir = path.join(__dirname, '..', 'deployments');
+  if (!fs.existsSync(deploymentsDir)) {
+    fs.mkdirSync(deploymentsDir, { recursive: true });
+  }
+  
+  const newDeploymentsPath = path.join(deploymentsDir, 'localhost.json');
+  if (!fs.existsSync(newDeploymentsPath)) {
+    // Create an empty deployments file
+    const emptyDeployments = {
+      chains: {}
+    };
+    fs.writeFileSync(newDeploymentsPath, JSON.stringify(emptyDeployments, null, 2), 'utf8');
+  }
+  
+  return newDeploymentsPath;
 }
 
 function _writeDeploymentsFile(filePath: string, deployments: any): void {
-  // Read the current file to preserve the structure
-  const currentContent = fs.readFileSync(filePath, 'utf8');
-  
-  // Find the chains object and replace it
-  const chainsStart = currentContent.indexOf('chains: {');
-  const chainsEnd = _findMatchingBrace(currentContent, chainsStart + 'chains: '.length);
-  
-  if (chainsStart === -1 || chainsEnd === -1) {
-    throw new Error('Could not parse esp.deployments.ts file structure');
+  // Check if the file is a JSON file
+  if (filePath.endsWith('.json')) {
+    // For JSON files, just write the deployments directly
+    fs.writeFileSync(filePath, JSON.stringify(deployments, null, 2), 'utf8');
+    return;
   }
   
-  // Generate the new chains content
-  const chainsContent = JSON.stringify(deployments.chains, null, 4)
-    .replace(/^{/, '')
-    .replace(/}$/, '')
-    .split('\n')
-    .map((line, index) => index === 0 ? line : `  ${line}`)
-    .join('\n');
-  
-  // Reconstruct the file
-  const beforeChains = currentContent.substring(0, chainsStart + 'chains: {'.length);
-  const afterChains = currentContent.substring(chainsEnd);
-  
-  const newContent = beforeChains + '\n' + chainsContent + '\n  ' + afterChains;
-  
-  fs.writeFileSync(filePath, newContent, 'utf8');
+  // For TypeScript/JavaScript files, preserve the structure
+  try {
+    // Read the current file to preserve the structure
+    const currentContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Find the chains object and replace it
+    const chainsStart = currentContent.indexOf('chains: {');
+    const chainsEnd = _findMatchingBrace(currentContent, chainsStart + 'chains: '.length);
+    
+    if (chainsStart === -1 || chainsEnd === -1) {
+      throw new Error('Could not parse esp.deployments.ts file structure');
+    }
+    
+    // Generate the new chains content
+    const chainsContent = JSON.stringify(deployments.chains, null, 4)
+      .replace(/^{/, '')
+      .replace(/}$/, '')
+      .split('\n')
+      .map((line, index) => index === 0 ? line : `  ${line}`)
+      .join('\n');
+    
+    // Reconstruct the file
+    const beforeChains = currentContent.substring(0, chainsStart + 'chains: {'.length);
+    const afterChains = currentContent.substring(chainsEnd);
+    
+    const newContent = beforeChains + '\n' + chainsContent + '\n  ' + afterChains;
+    
+    fs.writeFileSync(filePath, newContent, 'utf8');
+  } catch (error) {
+    // If there's an error parsing the file, create a new one with just the deployments
+    const newDeployments = {
+      espDeployments: deployments,
+      default: deployments
+    };
+    
+    const newContent = `/**
+ * Ethereum Storage Protocol (ESP) - Deployment Registry
+ * 
+ * This file tracks all ESP contract deployments across different networks.
+ * Used for reference, integration, and deployment management.
+ * 
+ * @version 0.2.0
+ * @license AGPL-3.0
+ */
+
+/**
+ * ESP Deployments - Simple Contract Registry
+ * Tracks deployed contract addresses and deployment info across networks
+ */
+
+export const espDeployments = ${JSON.stringify(deployments, null, 2)};
+
+export default espDeployments;`;
+    
+    fs.writeFileSync(filePath, newContent, 'utf8');
+  }
 }
 
 function _findMatchingBrace(content: string, startPos: number): number {

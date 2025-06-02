@@ -40,7 +40,8 @@
     "contracts/DataPointRegistry.sol",
     "contracts/DataPointStorage.sol",
     "contracts/interfaces/",
-    "docs/localhost-deployments.md"
+    "docs/localhost-deployments.md",
+    "deployments/"
   ],
   "scripts": {
     "test": "npx hardhat test",
