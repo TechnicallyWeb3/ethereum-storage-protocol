@@ -68,6 +68,35 @@ const tx = await dataPointRegistry.registerDataPoint(data, signer.address);
 await tx.wait();
 ```
 
+### Localhost Development
+
+For local development and testing without testnet tokens, you can add your own localhost deployments:
+
+```bash
+# Deploy ESP contracts to your local network first
+# (copy contracts to your project or create mock contracts)
+
+# Add your deployment using npx
+npx ethereum-storage add-localhost \
+  --dps 0x5FbDB2315678afecb367f032d93F642f64180aa3 \
+  --dpr 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 \
+  --owner 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 \
+  --royalty 100000000000000
+```
+
+Then use localhost contracts in your code:
+
+```typescript
+import { getContractAddress, loadContract } from 'ethereum-storage';
+
+// Connect to your localhost deployment
+const provider = new ethers.JsonRpcProvider('http://localhost:8545');
+const dprContract = loadContract(31337, 'dpr', provider); // 31337 = localhost
+const dpsContract = loadContract(31337, 'dps', provider);
+```
+
+For detailed localhost deployment management, see [docs/localhost-deployments.md](docs/localhost-deployments.md).
+
 ### Available Exports
 
 ```typescript

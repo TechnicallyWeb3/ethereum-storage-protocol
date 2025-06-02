@@ -29,7 +29,12 @@ export {
   loadContract,
   getContractAddress,
   getDeploymentInfo,
-  getSupportedChainIds
+  getSupportedChainIds,
+  addLocalhostDeployment,
+  removeLocalhostDeployment,
+  listAllDeployments,
+  hasLocalhostDeployment,
+  LocalDeploymentData
 } from './deployments';
 
 // Re-export types for convenience

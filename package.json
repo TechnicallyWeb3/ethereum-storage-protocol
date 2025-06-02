@@ -5,6 +5,9 @@
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",
+  "bin": {
+    "ethereum-storage": "./dist/cjs/src/cli.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/esm/src/index.js",
@@ -36,7 +39,8 @@
     "TIMESTAMP.md",
     "contracts/DataPointRegistry.sol",
     "contracts/DataPointStorage.sol",
-    "contracts/interfaces/"
+    "contracts/interfaces/",
+    "docs/localhost-deployments.md"
   ],
   "scripts": {
     "test": "npx hardhat test",
