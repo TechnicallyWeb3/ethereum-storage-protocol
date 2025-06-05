@@ -39,7 +39,8 @@
     "TIMESTAMP.md",
     "contracts/DataPointRegistry.sol",
     "contracts/DataPointStorage.sol",
-    "contracts/interfaces/"
+    "contracts/interfaces/",
+    "docs/localhost-deployments.md"
   ],
   "scripts": {
     "test": "npx hardhat test",
