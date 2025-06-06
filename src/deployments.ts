@@ -26,11 +26,13 @@ export interface LocalDeploymentData {
     contractAddress: string;
     deployerAddress: string;
     txHash?: string;
+    deployedAt?: string;
   };
   dpr: {
     contractAddress: string;
     deployerAddress: string;
     txHash?: string;
+    deployedAt?: string;
     constructors: {
       ownerAddress: string;
       dpsAddress: string;

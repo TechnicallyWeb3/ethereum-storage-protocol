@@ -69,4 +69,23 @@ interface IDataPointRegistry {
     /// @param _publisher The publisher of the data point
     /// @return dataPointAddress The address where the data point is stored
     function registerDataPoint(bytes memory _dataPoint, address _publisher) external payable returns (bytes32 dataPointAddress);
+
+    // ============= Openzeppelin Ownable =============
+    /// @dev The caller account is not authorized to perform an operation.
+    error OwnableUnauthorizedAccount(address account);
+
+    /// @dev The owner is not a valid owner account. (eg. `address(0)`)
+    error OwnableInvalidOwner(address owner);
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    
+    /// @notice Gets the current owner of the contract
+    /// @return The address of the current owner
+    function owner() external view returns (address);
+    /// @notice Renounces ownership of the contract
+    function renounceOwnership() external;
+    /// @notice Transfers ownership of the contract to a new account
+    /// @param newOwner The address of the new owner
+    function transferOwnership(address newOwner) external;
+
 } 
