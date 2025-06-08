@@ -18,6 +18,7 @@ ignition/deployments/chain-31337
 
 # Build folder for NPM package (ignored during development, included in npm)
 /dist
+*/interfaces
 
 # Smart contract audits
 /audits

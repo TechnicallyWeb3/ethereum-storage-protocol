@@ -222,7 +222,7 @@ await setRoyaltyRate('sepolia', '2000000000000000', 2);
 ### Compilation Issues
 If you encounter TypeScript compilation errors, make sure:
 ```bash
-npx hardhat compile
+npx hardhat build
 ```
 
 ### Network Connection Issues

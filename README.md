@@ -18,6 +18,7 @@ The Ethereum Storage Protocol provides immutable, content-addressed storage with
 - 🔧 **Modular Design**: Upgradeable registry with persistent storage layer
 - 📊 **Comprehensive Testing**: 95/95 tests passing with full coverage
 - 🤖 **AI-Ready**: Includes LLM context file for AI-assisted development
+- 🔄 **Interface Generation**: Automatic Solidity interface generation with hardhat-build
 
 ## Installation
 
@@ -149,6 +150,9 @@ This package includes `LLM_CONTEXT.md` - a comprehensive context file that helps
 ```shell
 # Install dependencies
 npm install
+
+# Build contracts and generate interfaces
+npm run compile  # Uses hardhat-build plugin
 
 # Run tests
 npm test

@@ -311,7 +311,7 @@ export const espDeployments = {
 
 ### Compilation Issues
 ```bash
-npx hardhat compile
+npx hardhat build
 ```
 
 ### Network Issues
