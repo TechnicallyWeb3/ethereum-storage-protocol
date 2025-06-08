@@ -1,6 +1,6 @@
 {
   "name": "@tw3/esp",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -40,6 +40,7 @@
     "contracts/DataPointRegistry.sol",
     "contracts/DataPointStorage.sol",
     "contracts/interfaces/",
+    "contracts/types/",
     "docs/localhost-deployments.md"
   ],
   "scripts": {
