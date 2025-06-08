@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-contract-sizer";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
+import "hardhat-build"
 
 // Import custom tasks
 import "./tasks/royalty";
