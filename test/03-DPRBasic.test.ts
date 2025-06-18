@@ -35,7 +35,7 @@ describe("DataPointRegistry Contract Audit", function () {
   describe("Contract Deployment and Setup", function () {
     it("Should deploy with correct initial parameters", async function () {
       expect(await registry.owner()).to.equal(await owner.getAddress());
-      expect(await registry.DPS_()).to.equal(await storage.getAddress());
+      expect(await registry.DPS()).to.equal(await storage.getAddress());
       expect(await registry.royaltyRate()).to.equal(ROYALTY_RATE);
     });
 
@@ -65,7 +65,7 @@ describe("DataPointRegistry Contract Audit", function () {
         const newStorage = await (await ethers.getContractFactory("DataPointStorage")).deploy();
         
         await registry.connect(owner).setDPS(await newStorage.getAddress());
-        expect(await registry.DPS_()).to.equal(await newStorage.getAddress());
+        expect(await registry.DPS()).to.equal(await newStorage.getAddress());
       });
 
       it("Should reject non-owner attempts to change DPS", async function () {
@@ -492,7 +492,7 @@ describe("DataPointRegistry Contract Audit", function () {
       await registry.connect(owner).setDPS(await newStorage.getAddress());
       
       // Verify new storage is being used
-      expect(await registry.DPS_()).to.equal(await newStorage.getAddress());
+      expect(await registry.DPS()).to.equal(await newStorage.getAddress());
       
       // Test registration with new storage
       const testData = ethers.toUtf8Bytes("new storage test");

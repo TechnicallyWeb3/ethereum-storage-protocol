@@ -16,21 +16,23 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/// !interface copyright "Copyright (C) 2025 TechnicallyWeb3"
-/// !interface build ./interfaces/IDataPointRegistry.sol
+/// @custom:interface copyright "Copyright (C) 2025 TechnicallyWeb3"
+/// @custom:interface build ./interfaces/IDataPointRegistry.sol
 
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.20;
 
 
 import "./types/ESPTypes.sol";
-/// !interface import "../types/ESPTypes.sol"
+/// @custom:interface import "../types/ESPTypes.sol"
 import "./interfaces/IDataPointStorage.sol";
-/// !interface import "./IDataPointStorage.sol"
+/// @custom:interface import "./IDataPointStorage.sol"
 import "@openzeppelin/contracts/access/Ownable.sol";
-/// !interface module "@openzeppelin/contracts/access/Ownable.sol" to "./interfaces/IOwnable.sol --remove Context"
-/// !interface import "./IOwnable.sol"
+/// @custom:interface module "@openzeppelin/contracts/access/Ownable.sol" to "./interfaces/IOwnable.sol --remove Context"
+/// @custom:interface import "./IOwnable.sol"
+/// @custom:interface replace Ownable with IOwnable
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+/// @custom:interface remove ReentrancyGuard
 
 
 /// @title Data Point Registry Contract
@@ -38,10 +40,12 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 /// @dev Extends storage functionality with economic incentives
 /// @custom:security ESP_FINGERPRINT_TW3_2025_DPR_v2
 contract DataPointRegistry is Ownable, ReentrancyGuard {
-    /// !interface replace Ownable with IOwnable
-    /// !interface remove ReentrancyGuard
 
-    IDataPointStorage public DPS_;
+    IDataPointStorage internal DPS_;
+
+    function DPS() external view returns (IDataPointStorage) {
+        return DPS_;
+    }
 
     /// @notice Contract constructor
     /// @param _owner Should be a DAO or multisig, has admin control over the contract

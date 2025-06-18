@@ -33,7 +33,7 @@ describe("Ethereum Storage Protocol - Full System Integration Audit", function (
   describe("System Architecture Validation", function () {
     it("Should have correct contract relationships", async function () {
       // Verify registry points to correct storage
-      expect(await registry.DPS_()).to.equal(await storage.getAddress());
+      expect(await registry.DPS()).to.equal(await storage.getAddress());
       
       // Verify storage is independent
       expect(await storage.VERSION()).to.equal(2);

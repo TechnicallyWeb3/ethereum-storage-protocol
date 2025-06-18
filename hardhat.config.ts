@@ -26,12 +26,16 @@ if (tw3Mnemonic === defaultMnemonic) {
   console.error('TW3_MNEMONIC is not set, using default mnemonic, DO NOT DEPLOY TO A LIVE NETWORK!');
 }
 
+const testKey = ethers.HDNodeWallet.fromPhrase(defaultMnemonic).privateKey;
+const testKey1 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/1`).privateKey;
+const testKey2 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/2`).privateKey;
+
 const dpsKey = ethers.Wallet.fromPhrase(dpsMnemonic).privateKey;
 const dprKey = ethers.Wallet.fromPhrase(dprMnemonic).privateKey;
-const tw3Key = ethers.Wallet.fromPhrase(tw3Mnemonic).privateKey;
-const user1Key = ethers.Wallet.fromPhrase(tw3Mnemonic).deriveChild(1).privateKey;
-const user2Key = ethers.Wallet.fromPhrase(tw3Mnemonic).deriveChild(2).privateKey;
-const user3Key = ethers.Wallet.fromPhrase(tw3Mnemonic).deriveChild(3).privateKey;
+const tw3Key = ethers.HDNodeWallet.fromPhrase(tw3Mnemonic).privateKey;
+const user1Key = ethers.HDNodeWallet.fromPhrase(tw3Mnemonic, undefined, `m/44'/60'/0'/0/1`).privateKey;
+const user2Key = ethers.HDNodeWallet.fromPhrase(tw3Mnemonic, undefined, `m/44'/60'/0'/0/2`).privateKey;
+const user3Key = ethers.HDNodeWallet.fromPhrase(tw3Mnemonic, undefined, `m/44'/60'/0'/0/3`).privateKey;
 
 // For hardhat network - with balance configuration
 const espDeployersHardhat = [
@@ -53,16 +57,35 @@ const espDeployerKeys = [
   user3Key
 ];
 
+const testDeployerHardhat = [
+  { privateKey: testKey, balance: "10000000000000000000000" },
+  { privateKey: testKey1, balance: "10000000000000000000000" },
+  { privateKey: testKey2, balance: "10000000000000000000000" },
+  { privateKey: testKey, balance: "10000000000000000000000" },
+  { privateKey: testKey, balance: "10000000000000000000000" },
+  { privateKey: testKey, balance: "10000000000000000000000" },
+];
+
+const testDeployerKeys = [
+  dpsKey,
+  dprKey,
+  testKey2,
+  testKey,
+  testKey,
+  testKey,
+];
+
 const config: HardhatUserConfig = {
   solidity: "0.8.28",
   networks: {
     hardhat: {
-      accounts: espDeployersHardhat,
+      accounts: testDeployerHardhat,
     },
     localhost: {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
       accounts: espDeployerKeys,
+      gasPrice: 20000000000, // 20 gwei
     },
     sepolia: {
       url: "https://ethereum-sepolia-rpc.publicnode.com",
