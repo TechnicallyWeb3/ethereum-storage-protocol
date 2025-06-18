@@ -19,7 +19,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.20;
 
-import "../DataPointStorage.sol";
+import "../../contracts/DataPointStorage.sol";
 
 /// @title Test Helper Contract
 /// @notice Provides access to standalone functions for testing

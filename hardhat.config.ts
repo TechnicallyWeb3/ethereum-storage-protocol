@@ -30,6 +30,14 @@ if (tw3Mnemonic === defaultMnemonic) {
 const testKey = ethers.HDNodeWallet.fromPhrase(defaultMnemonic).privateKey;
 const testKey1 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/1`).privateKey;
 const testKey2 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/2`).privateKey;
+const testKey3 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/3`).privateKey;
+const testKey4 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/4`).privateKey;
+const testKey5 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/5`).privateKey;
+const testKey6 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/6`).privateKey;
+const testKey7 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/7`).privateKey;
+const testKey8 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/8`).privateKey;
+const testKey9 = ethers.HDNodeWallet.fromPhrase(defaultMnemonic, undefined, `m/44'/60'/0'/0/9`).privateKey;
+
 
 const dpsKey = ethers.Wallet.fromPhrase(dpsMnemonic).privateKey;
 const dprKey = ethers.Wallet.fromPhrase(dprMnemonic).privateKey;
@@ -62,18 +70,26 @@ const testDeployerHardhat = [
   { privateKey: testKey, balance: "10000000000000000000000" },
   { privateKey: testKey1, balance: "10000000000000000000000" },
   { privateKey: testKey2, balance: "10000000000000000000000" },
-  { privateKey: testKey, balance: "10000000000000000000000" },
-  { privateKey: testKey, balance: "10000000000000000000000" },
-  { privateKey: testKey, balance: "10000000000000000000000" },
+  { privateKey: testKey3, balance: "10000000000000000000000" },
+  { privateKey: testKey4, balance: "10000000000000000000000" },
+  { privateKey: testKey5, balance: "10000000000000000000000" },
+  { privateKey: testKey6, balance: "10000000000000000000000" },
+  { privateKey: testKey7, balance: "10000000000000000000000" },
+  { privateKey: testKey8, balance: "10000000000000000000000" },
+  { privateKey: testKey9, balance: "10000000000000000000000" },
 ];
 
 const testDeployerKeys = [
   dpsKey,
   dprKey,
   testKey2,
-  testKey,
-  testKey,
-  testKey,
+  testKey3,
+  testKey4,
+  testKey5,
+  testKey6,
+  testKey7,
+  testKey8,
+  testKey9,
 ];
 
 const config: HardhatUserConfig = {

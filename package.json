@@ -1,6 +1,6 @@
 {
   "name": "ethereum-storage",
-  "version": "0.5.6",
+  "version": "0.6.0",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -44,13 +44,15 @@
     "docs/localhost-deployments.md"
   ],
   "scripts": {
-    "test": "npx hardhat test",
+    "test": "npm run test:setup && npx hardhat test && npm run test:cleanup",
+    "test:setup": "npx shx cp -r test-contracts/* contracts/",
+    "test:cleanup": "npx shx rm -rf contracts/test",
     "compile": "npx hardhat build --force",
     "build": "npm run compile && npm run clean && npm run build:types && npm run build:cjs && npm run build:esm",
     "build:types": "tsc --project tsconfig.build.json --declaration --emitDeclarationOnly --outDir dist/types",
     "build:cjs": "tsc --project tsconfig.build.json --module commonjs --outDir dist/cjs",
     "build:esm": "tsc --project tsconfig.build.json --module esnext --outDir dist/esm",
-    "clean": "rimraf dist",
+    "clean": "shx rm -rf dist",
     "prepublishOnly": "npm run test && npm run build",
     "publish:all": "ts-node scripts/publish-packages.ts",
     "publish:dry": "ts-node scripts/publish-packages.ts --dry-run",
@@ -87,7 +89,7 @@
     "hardhat": "^2.24.1",
     "hardhat-build": "^0.1.3",
     "hardhat-contract-sizer": "^2.10.0",
-    "rimraf": "^5.0.0",
+    "shx": "^0.4.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   },

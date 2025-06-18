@@ -17,6 +17,12 @@ describe("Ethereum Storage Protocol - Full System Integration Audit", function (
   
   beforeEach(async function () {
     [owner, publisher1, publisher2, user1, user2, user3] = await ethers.getSigners();
+    // console.log("owner", await owner.getAddress());
+    // console.log("publisher1", await publisher1.getAddress());
+    // console.log("publisher2", await publisher2.getAddress());
+    // console.log("user1", await user1.getAddress());
+    // console.log("user2", await user2.getAddress());
+    // console.log("user3", await user3.getAddress());
     
     // Deploy complete system
     const StorageFactory = await ethers.getContractFactory("DataPointStorage");
