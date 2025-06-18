@@ -59,65 +59,50 @@ export async function addDeployment(deploymentData: DeploymentData): Promise<voi
       }
     }`;
 
-    // Check if chain already exists
-    const chainRegex = new RegExp(`    ${deploymentData.chainId}: {[^}]*(?:}[^}]*)*}`, 's');
+    // Check if chain already exists and build a more precise regex for replacement
+    const chainRegex = new RegExp(`    ${deploymentData.chainId}: \\{[\\s\\S]*?\\n    \\}`, 's');
     
     if (registryContent.match(chainRegex)) {
-      // Update existing chain
+      // Update existing chain - be careful to preserve structure
       registryContent = registryContent.replace(chainRegex, chainEntry);
       console.log(`📝 Updated existing ${deploymentData.chainId} deployment in registry`);
     } else {
-      // Find the insertion point within the chains object
-      // Look for the closing brace of the chains object
-      const chainsPattern = /chains:\s*{([^}]*(?:}[^}]*)*)}[^}]*$/s;
-      const match = registryContent.match(chainsPattern);
+      // For adding new chains, we need to be more specific about where to insert
+      // Find the last existing chain entry and insert after it
+      const chainsObjectPattern = /export const espDeployments[^=]*=\s*{\s*chains:\s*{([^}]*(?:}[^}]*)*?)}\s*}/s;
+      const match = registryContent.match(chainsObjectPattern);
       
       if (match) {
-        // Find where the chains object closes
-        const chainsStart = registryContent.indexOf('chains: {');
-        const chainsOpenBrace = registryContent.indexOf('{', chainsStart + 'chains: '.length);
+        const chainsContent = match[1];
         
-        // Find the matching closing brace for chains
-        let braceCount = 1;
-        let i = chainsOpenBrace + 1;
-        let chainsEnd = -1;
+        // Check if there are existing chains
+        const hasExistingChains = /\d+:\s*{/.test(chainsContent);
         
-        while (i < registryContent.length && braceCount > 0) {
-          if (registryContent[i] === '{') braceCount++;
-          if (registryContent[i] === '}') braceCount--;
-          if (braceCount === 0) {
-            chainsEnd = i;
-            break;
-          }
-          i++;
-        }
-        
-        if (chainsEnd !== -1) {
-          const beforeInsert = registryContent.substring(0, chainsEnd);
-          const afterInsert = registryContent.substring(chainsEnd);
+        if (hasExistingChains) {
+          // Find the last chain entry and add comma + new entry
+          const insertPattern = /(.*})(\s*)(}\s*};\s*export default espDeployments;)/s;
+          const insertMatch = registryContent.match(insertPattern);
           
-          // Check if we need a comma (if there are existing chains)
-          const hasExistingNetworks = beforeInsert.includes(': {') && 
-                                     beforeInsert.trim().endsWith('}') && 
-                                     !beforeInsert.trim().endsWith('chains: {');
-          
-          if (hasExistingNetworks) {
-            // Insert comma immediately after the last closing brace before inserting new chain
-            const lastBraceIndex = beforeInsert.lastIndexOf('}');
-            const beforeLastBrace = beforeInsert.substring(0, lastBraceIndex + 1);
-            const afterLastBrace = beforeInsert.substring(lastBraceIndex + 1);
-            
-            registryContent = beforeLastBrace + ',\n' + chainEntry + '\n  ' + afterLastBrace + afterInsert;
+          if (insertMatch) {
+            registryContent = insertMatch[1] + ',\n' + chainEntry + '\n  ' + insertMatch[3];
           } else {
-            registryContent = beforeInsert + '\n' + chainEntry + '\n  ' + afterInsert;
+            throw new Error('Could not find insertion point for new chain');
           }
-          
-          console.log(`📝 Added new ${deploymentData.chainId} deployment to registry`);
         } else {
-          throw new Error('Could not find chains closing brace');
+          // No existing chains, insert as first entry
+          const insertPattern = /(export const espDeployments[^=]*=\s*{\s*chains:\s*{)(\s*)(}\s*};\s*export default espDeployments;)/s;
+          const insertMatch = registryContent.match(insertPattern);
+          
+          if (insertMatch) {
+            registryContent = insertMatch[1] + '\n' + chainEntry + '\n  ' + insertMatch[3];
+          } else {
+            throw new Error('Could not find insertion point for first chain');
+          }
         }
+        
+        console.log(`📝 Added new ${deploymentData.chainId} deployment to registry`);
       } else {
-        throw new Error('Could not find chains object in registry file');
+        throw new Error('Could not find chains object structure in registry file');
       }
     }
     

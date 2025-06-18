@@ -23,6 +23,9 @@ npx hardhat deploy:vanity --royalty 0.01 --network sepolia
 
 # Deploy without verification (verification enabled by default)
 npx hardhat deploy:vanity --royalty 0.5 --skip-verify --network sepolia
+
+# Deploy with custom confirmation waiting
+npx hardhat deploy:vanity --royalty 0.01 --confirmations 10 --network sepolia
 ```
 
 #### Parameters
@@ -36,13 +39,19 @@ npx hardhat deploy:vanity --royalty 0.5 --skip-verify --network sepolia
   - **Default**: Verification enabled for mainnet/testnet, disabled for local networks
   - **Usage**: Add flag to skip verification
 
+- **`--confirmations`** (optional): Number of block confirmations to wait before verification
+  - **Default**: 5 confirmations
+  - **Example**: `--confirmations 10` (waits for 10 confirmations)
+  - **Purpose**: Allows Etherscan time to index contracts before verification
+
 #### Features
 
 ✅ **Automatic Gas Calculation**: Calculates optimal royalty rate based on network conditions  
 ✅ **Vanity Address Support**: Handles vanity deployment requirements and nonce validation  
 ✅ **Smart Funding**: Automatically funds deployer accounts from owner if needed  
 ✅ **Registry Integration**: Updates `esp.deployments.ts` automatically  
-✅ **Verification by Default**: Auto-verifies contracts on block explorers unless skipped  
+✅ **Enhanced Verification**: Auto-verifies contracts with configurable confirmation waiting  
+✅ **Etherscan Indexing**: Waits for block confirmations to ensure reliable verification  
 ✅ **GWEI Display**: Shows all rates in human-readable GWEI format  
 
 ### 2. `deploy:ignition` - Deploy using Hardhat Ignition
@@ -86,16 +95,71 @@ npx hardhat deploy:ignition --royalty 0.1 --skip-verify --network sepolia
 ✅ **Resumable Deployments**: Can resume interrupted deployments  
 ✅ **Atomic Operations**: Ensures all contracts deploy successfully or none do  
 ✅ **Parameter Management**: Clean parameter passing to deployment modules  
-✅ **Auto Verification**: Automatically verifies contracts unless skipped  
+✅ **Enhanced Verification**: Automatically verifies contracts with 5-confirmation waiting  
 
 ### 3. `deploy:verify` - Verify Deployed Contracts
 
-Verify already-deployed contracts on block explorers.
+Verify already-deployed contracts on block explorers with enhanced reliability features.
 
 #### Usage
 
 ```bash
+# Manual verification with contract addresses
 npx hardhat deploy:verify \
+  --dps 0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB \
+  --dpr 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE \
+  --owner 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3 \
+  --royalty 10000000 \
+  --network sepolia
+
+# Auto-load from esp.deployments.ts (recommended)
+npx hardhat deploy:verify --auto --network sepolia
+
+# Custom confirmation waiting
+npx hardhat deploy:verify --auto --confirmations 10 --network sepolia
+
+# Skip confirmation waiting (immediate verification)
+npx hardhat deploy:verify --auto --skip-wait --network sepolia
+```
+
+#### Parameters
+
+- **`--dps`** (optional): DataPointStorage contract address
+- **`--dpr`** (optional): DataPointRegistry contract address  
+- **`--owner`** (optional): Owner address used in DPR constructor
+- **`--royalty`** (optional): Royalty rate used in DPR constructor (in wei)
+- **`--auto`** (flag): Automatically load contract data from `esp.deployments.ts`
+- **`--confirmations`** (optional): Number of confirmations to wait before verification (default: 5)
+- **`--skip-wait`** (flag): Skip waiting for confirmations before verification
+- **`--chainid`** (optional): Chain ID to verify (defaults to current network)
+
+#### Features
+
+✅ **Auto-Loading**: Automatically loads contract addresses from deployment registry  
+✅ **Confirmation Waiting**: Waits for block confirmations before verification attempts  
+✅ **Real-time Feedback**: Shows current block and target block during waiting  
+✅ **Fallback Support**: Gracefully handles verification failures  
+✅ **Multi-Network**: Supports verification across different networks
+
+### 4. `deploy:register` - Register Deployed Contracts
+
+Register already-deployed contracts in the ESP deployment registry (`esp.deployments.ts`).
+
+#### Usage
+
+```bash
+# Register contracts with transaction hashes
+npx hardhat deploy:register \
+  --dps 0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB \
+  --dpr 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE \
+  --owner 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3 \
+  --royalty 10000000 \
+  --dps-tx 0xabc123... \
+  --dpr-tx 0xdef456... \
+  --network sepolia
+
+# Register without transaction hashes (will use "TBD")
+npx hardhat deploy:register \
   --dps 0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB \
   --dpr 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE \
   --owner 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3 \
@@ -109,6 +173,18 @@ npx hardhat deploy:verify \
 - **`--dpr`** (required): DataPointRegistry contract address  
 - **`--owner`** (required): Owner address used in DPR constructor
 - **`--royalty`** (required): Royalty rate used in DPR constructor (in wei)
+- **`--dps-deployer`** (optional): DPS deployer address (defaults to current signer)
+- **`--dpr-deployer`** (optional): DPR deployer address (defaults to current signer)
+- **`--dps-tx`** (optional): DPS transaction hash (default: "TBD")
+- **`--dpr-tx`** (optional): DPR transaction hash (default: "TBD")
+- **`--chainid`** (optional): Chain ID to register (defaults to current network)
+
+#### Features
+
+✅ **Registry Management**: Updates the centralized deployment registry  
+✅ **Auto-Detection**: Automatically detects chain ID and deployer addresses  
+✅ **Validation**: Ensures all required parameters are provided  
+✅ **Integration**: Enables auto-loading for future verification tasks
 
 ## Examples
 
@@ -124,9 +200,10 @@ npx hardhat deploy:vanity --network sepolia
 🌐 Network: sepolia
 
 💰 Using default royalty rate: 1/1000th of current gas price
-🚀 Starting vanity deployment script...
+🔍 Contract verification: ENABLED with 5 confirmations wait
+🚀 Starting quick & dirty vanity deployment script...
 
-📡 Network: sepolia
+📡 Network: sepolia - ChainId: 11155111
 🔍 Contract verification: ENABLED
 
 📋 Deployment Configuration:
@@ -135,6 +212,20 @@ DPR Deployer (signer 1): 0xb37Be4AFc1d210c662E8F05FC0AaEd4EddDD809E
 DPR Owner (signer 2): 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3
 
 ...deployment process...
+
+🔍 Starting enhanced contract verification procedure...
+⏳ Waiting for 5 confirmations before verification to allow Etherscan indexing...
+📊 Current block: 7123456, waiting for block: 7123461
+⏳ Current block: 7123457, waiting...
+⏳ Current block: 7123458, waiting...
+✅ Reached block 7123461, proceeding with verification...
+
+🔍 Verifying contracts on sepolia...
+📋 Verifying DataPointStorage...
+✅ DataPointStorage verified!
+📋 Verifying DataPointRegistry...
+✅ DataPointRegistry verified!
+🎉 Verification process completed!
 
 🎉 Deployment completed successfully!
 
@@ -145,6 +236,8 @@ DataPointStorage: 0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB (deployed)
 DataPointRegistry: 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE (deployed)
 Owner:            0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3
 Royalty Rate:     20.0 GWEI
+Etherscan:        Contracts verified on block explorer
+============================================================
 
 🎉 Vanity deployment completed successfully!
 📍 DPS: 0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB
@@ -185,15 +278,45 @@ npx hardhat deploy:vanity --royalty 1.0 --network localhost
 ...deployment without verification...
 ```
 
-### Scenario 4: Manual Verification
+### Scenario 4: Enhanced Auto Verification
 
 ```bash
-# After deployment, verify contracts manually
+# Auto-load contract data and verify with default 5 confirmations
+npx hardhat deploy:verify --auto --network sepolia
+```
+
+**Output:**
+```
+📋 Auto-loading contract data from esp.deployments.ts...
+✅ Loaded deployment for chain ID 11155111
+📍 DPS: 0xDA7Adb41ac559e689fE170aE4f2853a450e6E4Cc
+📍 DPR: 0xDA7Ae59Fa1DB9B138dddaaFB6153B11B162Cfd8B
+👤 Owner: 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3
+💰 Royalty: 1079 wei
+
+⏳ Waiting for 5 confirmations before verification to allow Etherscan indexing...
+📊 Current block: 7123456, waiting for block: 7123461
+⏳ Current block: 7123457, waiting...
+✅ Reached block 7123461, proceeding with verification...
+
+🔍 Verifying contracts on sepolia...
+📋 Verifying DataPointStorage...
+ℹ️  DataPointStorage already verified
+📋 Verifying DataPointRegistry...
+ℹ️  DataPointRegistry already verified
+🎉 Verification process completed!
+```
+
+### Scenario 5: Manual Verification with Custom Parameters
+
+```bash
+# Manual verification with specific parameters
 npx hardhat deploy:verify \
   --dps 0xDA7A3A73d3bAf09AE79Bac612f03B4c0d51859dB \
   --dpr 0xDA7A6cBEa6113fae8C55165e354bCab49b0923cE \
   --owner 0xDA00006427E534B1Acde93B9E66d8A9d2C66B2d3 \
   --royalty 10000000 \
+  --confirmations 10 \
   --network sepolia
 ```
 

@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 import "hardhat-contract-sizer";
 import dotenv from "dotenv";
 import { ethers } from "ethers";
@@ -85,7 +86,7 @@ const config: HardhatUserConfig = {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
       accounts: espDeployerKeys,
-      gasPrice: 20000000000, // 20 gwei
+      blockGasLimit: 30000000,
     },
     sepolia: {
       url: "https://ethereum-sepolia-rpc.publicnode.com",

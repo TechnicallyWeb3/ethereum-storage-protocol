@@ -25,13 +25,30 @@ task("royalty", "Manage DPR contract royalty rates")
     
     const { action, rate, signer } = taskArgs;
     const networkName = hre.network.name;
+    
+    // Map network name to chain ID
+    const networkToChainId: { [key: string]: number } = {
+      'sepolia': 11155111,
+      'mainnet': 1,
+      'polygon': 137,
+      'bsc': 56,
+      'arbitrum': 42161,
+      'optimism': 10,
+      'localhost': 31337,
+      'hardhat': 31337
+    };
+    
+    const chainId = networkToChainId[networkName];
+    if (!chainId) {
+      throw new Error(`❌ Unknown network: ${networkName}. Supported networks: ${Object.keys(networkToChainId).join(', ')}`);
+    }
 
-    console.log(`🌐 Network: ${networkName}`);
+    console.log(`🌐 Network: ${networkName} (Chain ID: ${chainId})`);
     console.log(`🎯 Action: ${action}`);
 
     try {
       if (action === "get") {
-        await getCurrentRoyaltyRate(networkName);
+        await getCurrentRoyaltyRate(chainId);
       } else if (action === "set") {
         if (!rate) {
           throw new Error("❌ Rate parameter is required for 'set' action. Use --rate <value_in_gwei>");
@@ -40,7 +57,7 @@ task("royalty", "Manage DPR contract royalty rates")
         const rateInWei = hre.ethers.parseUnits(rate, "gwei").toString();
         console.log(`👤 Using signer index: ${signer}`);
         console.log(`💰 Converting ${rate} GWEI to ${rateInWei} wei`);
-        await setRoyaltyRate(networkName, rateInWei, signer);
+        await setRoyaltyRate(chainId, rateInWei, signer);
       } else {
         throw new Error(`❌ Invalid action: ${action}. Use 'get' or 'set'`);
       }
@@ -54,7 +71,26 @@ task("royalty", "Manage DPR contract royalty rates")
 task("royalty:get", "Get current royalty rate")
   .setAction(async (_, hre) => {
     const { getCurrentRoyaltyRate } = await import("../scripts/SetRoyaltyRate");
-    await getCurrentRoyaltyRate(hre.network.name);
+    
+    // Map network name to chain ID
+    const networkToChainId: { [key: string]: number } = {
+      'sepolia': 11155111,
+      'mainnet': 1,
+      'polygon': 137,
+      'bsc': 56,
+      'arbitrum': 42161,
+      'optimism': 10,
+      'localhost': 31337,
+      'hardhat': 31337
+    };
+    
+    const networkName = hre.network.name;
+    const chainId = networkToChainId[networkName];
+    if (!chainId) {
+      throw new Error(`❌ Unknown network: ${networkName}. Supported networks: ${Object.keys(networkToChainId).join(', ')}`);
+    }
+    
+    await getCurrentRoyaltyRate(chainId);
   });
 
 task("royalty:set", "Set new royalty rate")
@@ -68,11 +104,30 @@ task("royalty:set", "Set new royalty rate")
   .setAction(async (taskArgs, hre) => {
     const { setRoyaltyRate } = await import("../scripts/SetRoyaltyRate");
     const { rate, signer } = taskArgs;
-    console.log(`🌐 Network: ${hre.network.name}`);
+    
+    // Map network name to chain ID
+    const networkToChainId: { [key: string]: number } = {
+      'sepolia': 11155111,
+      'mainnet': 1,
+      'polygon': 137,
+      'bsc': 56,
+      'arbitrum': 42161,
+      'optimism': 10,
+      'localhost': 31337,
+      'hardhat': 31337
+    };
+    
+    const networkName = hre.network.name;
+    const chainId = networkToChainId[networkName];
+    if (!chainId) {
+      throw new Error(`❌ Unknown network: ${networkName}. Supported networks: ${Object.keys(networkToChainId).join(', ')}`);
+    }
+    
+    console.log(`🌐 Network: ${networkName} (Chain ID: ${chainId})`);
     console.log(`👤 Using signer index: ${signer}`);
     
     // Convert GWEI to wei
     const rateInWei = hre.ethers.parseUnits(rate, "gwei").toString();
     console.log(`💰 Converting ${rate} GWEI to ${rateInWei} wei`);
-    await setRoyaltyRate(hre.network.name, rateInWei, signer);
+    await setRoyaltyRate(chainId, rateInWei, signer);
   }); 

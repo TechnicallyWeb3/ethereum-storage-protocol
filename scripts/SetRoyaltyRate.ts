@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { espDeployments } from "../esp.deployments";
 import { DataPointRegistry } from "../typechain-types";
 
-interface NetworkConfig {
+interface ChainConfig {
   dpr: {
     contractAddress: string;
   };
@@ -10,25 +10,25 @@ interface NetworkConfig {
 
 /**
  * Set the royalty rate for the DataPointRegistry contract
- * @param networkName - The network name to set royalty rate on
+ * @param chainId - The chain ID to set royalty rate on
  * @param newRoyaltyRate - The new royalty rate in wei (e.g., "1000000000000000" for 0.001 ETH)
  * @param signerIndex - Index of the signer account (should be owner, default: 2 for TW3)
  */
 export async function setRoyaltyRate(
-  networkName: string, 
+  chainId: number, 
   newRoyaltyRate: string,
   signerIndex: number = 2
 ): Promise<void> {
-  console.log(`🔧 Setting royalty rate on ${networkName} network...`);
+  console.log(`🔧 Setting royalty rate on chain ID ${chainId}...`);
   
-  // Get network configuration from deployment registry
-  const networkConfig = (espDeployments.networks as any)[networkName] as NetworkConfig;
+  // Get chain configuration from deployment registry
+  const chainConfig = espDeployments.chains[chainId] as ChainConfig;
   
-  if (!networkConfig || !networkConfig.dpr) {
-    throw new Error(`❌ No DPR deployment found for network: ${networkName}`);
+  if (!chainConfig || !chainConfig.dpr) {
+    throw new Error(`❌ No DPR deployment found for chain ID: ${chainId}`);
   }
   
-  const dprAddress = networkConfig.dpr.contractAddress;
+  const dprAddress = chainConfig.dpr.contractAddress;
   console.log(`📍 DPR Contract Address: ${dprAddress}`);
   console.log(`💰 New Royalty Rate: ${ethers.formatUnits(newRoyaltyRate, "gwei")} GWEI`);
   
@@ -81,19 +81,19 @@ export async function setRoyaltyRate(
 
 /**
  * Get current royalty rate from the DPR contract
- * @param networkName - The network name to query
+ * @param chainId - The chain ID to query
  */
-export async function getCurrentRoyaltyRate(networkName: string): Promise<string> {
-  console.log(`📊 Getting current royalty rate on ${networkName} network...`);
+export async function getCurrentRoyaltyRate(chainId: number): Promise<string> {
+  console.log(`📊 Getting current royalty rate on chain ID ${chainId}...`);
   
-  // Get network configuration from deployment registry
-  const networkConfig = (espDeployments.networks as any)[networkName] as NetworkConfig;
+  // Get chain configuration from deployment registry
+  const chainConfig = espDeployments.chains[chainId] as ChainConfig;
   
-  if (!networkConfig || !networkConfig.dpr) {
-    throw new Error(`❌ No DPR deployment found for network: ${networkName}`);
+  if (!chainConfig || !chainConfig.dpr) {
+    throw new Error(`❌ No DPR deployment found for chain ID: ${chainId}`);
   }
   
-  const dprAddress = networkConfig.dpr.contractAddress;
+  const dprAddress = chainConfig.dpr.contractAddress;
   console.log(`📍 DPR Contract Address: ${dprAddress}`);
   
   // Connect to the DPR contract (read-only, no signer needed)
@@ -109,9 +109,32 @@ export async function getCurrentRoyaltyRate(networkName: string): Promise<string
   return rateString;
 }
 
+/**
+ * Helper function to map network names to chain IDs
+ */
+function getChainIdFromNetwork(networkName: string): number {
+  const networkToChainId: { [key: string]: number } = {
+    'sepolia': 11155111,
+    'mainnet': 1,
+    'polygon': 137,
+    'bsc': 56,
+    'arbitrum': 42161,
+    'optimism': 10,
+    'localhost': 31337,
+    'hardhat': 31337
+  };
+  
+  const chainId = networkToChainId[networkName];
+  if (!chainId) {
+    throw new Error(`❌ Unknown network: ${networkName}. Supported networks: ${Object.keys(networkToChainId).join(', ')}`);
+  }
+  
+  return chainId;
+}
+
 // CLI execution
 if (require.main === module) {
-  async function main() {
+  const main = async () => {
     const args = process.argv.slice(2);
     
     if (args.length < 1) {
@@ -120,14 +143,21 @@ if (require.main === module) {
       console.log(`  ROYALTY_RATE: New royalty rate in wei (required for setting)`);
       console.log(`  SIGNER_INDEX: Index of signer account (default: 2)`);
       console.log(`  ACTION: 'set' or 'get' (default: 'get')`);
+      console.log(`  CHAIN_ID: Chain ID to use (optional, defaults to current network)`);
       console.log(`Examples:`);
       console.log(`  ACTION=get npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia`);
       console.log(`  ACTION=set ROYALTY_RATE=1000000000000000 npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia`);
+      console.log(`  ACTION=get CHAIN_ID=11155111 npx hardhat run scripts/SetRoyaltyRate.ts --network sepolia`);
       process.exit(1);
     }
     
     const network = await ethers.provider.getNetwork();
     const networkName = network.name === "unknown" ? "localhost" : network.name;
+    
+    // Allow override of chain ID via environment variable
+    const chainId = process.env.CHAIN_ID 
+      ? parseInt(process.env.CHAIN_ID) 
+      : getChainIdFromNetwork(networkName);
     
     const action = process.env.ACTION || 'get';
     const signerIndex = parseInt(process.env.SIGNER_INDEX || '2');
@@ -138,15 +168,15 @@ if (require.main === module) {
         if (!royaltyRate) {
           throw new Error(`❌ ROYALTY_RATE environment variable is required for setting royalty rate`);
         }
-        await setRoyaltyRate(networkName, royaltyRate, signerIndex);
+        await setRoyaltyRate(chainId, royaltyRate, signerIndex);
       } else {
-        await getCurrentRoyaltyRate(networkName);
+        await getCurrentRoyaltyRate(chainId);
       }
     } catch (error) {
       console.error(`❌ Error:`, error);
       process.exit(1);
     }
-  }
+  };
   
   main().catch((error) => {
     console.error(error);
