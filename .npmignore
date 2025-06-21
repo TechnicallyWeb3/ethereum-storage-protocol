@@ -26,18 +26,12 @@ test/
 /typechain-types
 
 # Build tools and scripts
-scripts/copy-contracts.ts
 scripts/publish-packages.ts
-
-# Original contracts (cleaned versions are in dist/contracts)
-contracts/
 
 # Documentation and examples that aren't needed in package
 docs/
-audits/
-example-usage.md
-TASK_IMPROVEMENTS_SUMMARY.md
-ROYALTY_SCRIPTS_SUMMARY.md
+agent-files/
+
 
 # Version control
 .git/
@@ -108,6 +102,3 @@ tests/
 # Hardhat specific
 cache/
 artifacts/
-
-# AI Agent files
-/agent-files
