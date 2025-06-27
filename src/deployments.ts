@@ -3,21 +3,17 @@
  * 
  * Re-exports esp.deployments.ts with additional utility functions
  */
-import { DataPointRegistry } from '../typechain-types/contracts/DataPointRegistry';
-import { DataPointStorage } from '../typechain-types/contracts/DataPointStorage';
-import { DataPointRegistry__factory } from '../typechain-types/factories/contracts/DataPointRegistry__factory';
-import { DataPointStorage__factory } from '../typechain-types/factories/contracts/DataPointStorage__factory';
+import { 
+  DataPointStorage, 
+  DataPointRegistry, 
+  DataPointRegistry__factory, 
+  DataPointStorage__factory 
+} from '../typechain-types';
 import { Provider } from 'ethers';
 import * as fs from 'fs';
 import * as path from 'path';
 
 export { espDeployments, default } from '../esp.deployments';
-export type { 
-  DataPointRegistry, 
-  DataPointStorage,
-  DataPointRegistry__factory,
-  DataPointStorage__factory
-} from '../typechain-types';
 
 // Types for deployment management
 export interface LocalDeploymentData {

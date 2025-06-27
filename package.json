@@ -1,6 +1,6 @@
 {
   "name": "ethereum-storage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -83,7 +83,7 @@
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@openzeppelin/contracts": "^5.0.0"
   }
 }
