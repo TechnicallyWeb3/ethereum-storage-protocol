@@ -168,12 +168,6 @@ contract DataPointRegistry is Ownable, ReentrancyGuard {
         DataPointRoyalty storage royalty = dataPointRoyalty[dataPointAddress];
         uint256 royaltyCost = getDataPointRoyalty(dataPointAddress);
 
-        // if the data point is already owned by the publisher, we can return the address without doing anything
-        if (royalty.publisher == msg.sender) {
-            publisherBalance[royalty.publisher] += royaltyCost;
-            return dataPointAddress;
-        }
-
         // if the data point is new, we need to write it to the storage contract
         if (DPS_.dataPointSize(dataPointAddress) == 0) {
             

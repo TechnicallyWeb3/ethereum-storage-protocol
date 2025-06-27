@@ -295,13 +295,16 @@ describe("DataPointRegistry Contract Audit", function () {
         const dataAddress = await storage.calculateAddress(testData);
         
         const initialBalance = await registry.royaltyBalance(await publisher1.getAddress());
+
+        const royaltyCost = await registry.getDataPointRoyalty(dataAddress);
         
         // Publisher re-registering should increase their balance
-        await registry.connect(publisher1).registerDataPoint(testData, await publisher1.getAddress());
+        await registry.connect(publisher1).registerDataPoint(testData, await publisher1.getAddress(), {
+          value: royaltyCost
+        });
         
         const finalBalance = await registry.royaltyBalance(await publisher1.getAddress());
-        const royaltyCost = await registry.getDataPointRoyalty(dataAddress);
-        expect(finalBalance - initialBalance).to.equal(royaltyCost);
+        expect(finalBalance - initialBalance).to.equal(royaltyCost * BigInt(9) / BigInt(10));
       });
     });
   });
