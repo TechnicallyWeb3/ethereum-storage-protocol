@@ -149,6 +149,10 @@ task("deploy:verify", "Verify deployed contracts on block explorer")
   .addFlag("auto", "Automatically load contract addresses from esp.deployments.ts")
   .addFlag("skipWait", "Skip waiting for confirmations before verification")
   .setAction(async (taskArgs, hre) => {
+    function delay(ms: number): Promise<void> {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     const { dps, dpr, owner, royalty, chainid, auto, confirmations, skipWait } = taskArgs;
     
     let contractDps = dps;
@@ -252,6 +256,7 @@ task("deploy:verify", "Verify deployed contracts on block explorer")
         console.log("❌ DataPointStorage verification failed:", error.message);
       }
     }
+    await delay(2000);
 
     try {
       // Verify DataPointRegistry
