@@ -1,6 +1,6 @@
 {
   "name": "ethereum-storage",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
