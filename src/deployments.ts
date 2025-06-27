@@ -17,7 +17,7 @@ export type {
   DataPointStorage,
   DataPointRegistry__factory,
   DataPointStorage__factory
-} from './types';
+} from '../typechain-types';
 
 // Types for deployment management
 export interface LocalDeploymentData {

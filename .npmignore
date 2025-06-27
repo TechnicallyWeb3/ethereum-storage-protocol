@@ -98,6 +98,7 @@ tests/
 *.test.ts
 *.spec.js
 *.spec.ts
+/test-*
 
 # Hardhat specific
 cache/

@@ -1,6 +1,6 @@
 {
   "name": "ethereum-storage",
-  "version": "0.6.1",
+  "version": "1.0.0",
   "description": "Storage protocol built on ethereum using datapoint archetecture and a registry contract for handling royalties.",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -14,20 +14,10 @@
       "require": "./dist/cjs/src/index.js",
       "types": "./dist/types/src/index.d.ts"
     },
-    "./contracts": {
-      "import": "./dist/esm/src/contracts/index.js",
-      "require": "./dist/cjs/src/contracts/index.js",
-      "types": "./dist/types/src/contracts/index.d.ts"
-    },
-    "./types": {
-      "import": "./dist/esm/src/types/index.js",
-      "require": "./dist/cjs/src/types/index.js",
-      "types": "./dist/types/src/types/index.d.ts"
-    },
     "./deployments": {
-      "import": "./dist/esm/deployments.js",
-      "require": "./dist/cjs/deployments.js",
-      "types": "./dist/types/deployments.d.ts"
+      "import": "./dist/esm/src/deployments.js",
+      "require": "./dist/cjs/src/deployments.js",
+      "types": "./dist/types/src/deployments.d.ts"
     },
     "./contracts/*": "./contracts/*"
   },
@@ -51,7 +41,7 @@
     "build": "npm run compile && npm run clean && npm run build:types && npm run build:cjs && npm run build:esm",
     "build:types": "tsc --project tsconfig.build.json --declaration --emitDeclarationOnly --outDir dist/types",
     "build:cjs": "tsc --project tsconfig.build.json --module commonjs --outDir dist/cjs",
-    "build:esm": "tsc --project tsconfig.build.json --module esnext --outDir dist/esm",
+    "build:esm": "tsc --project tsconfig.build.json --module nodenext --moduleResolution nodenext --outDir dist/esm",
     "clean": "shx rm -rf dist",
     "prepublishOnly": "npm run test && npm run build",
     "publish:all": "ts-node scripts/publish-packages.ts",
