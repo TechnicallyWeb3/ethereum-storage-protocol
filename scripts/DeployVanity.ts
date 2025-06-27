@@ -2,6 +2,8 @@ import hre from "hardhat";
 import { formatEther, formatUnits, parseUnits, toUtf8Bytes } from "ethers";
 import { DataPointStorage, DataPointRegistry } from "../typechain-types";
 import { addDeployment, formatDeploymentData } from './AddDeployment';
+import dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * Deploy ESP contracts with vanity addresses using try-catch funding strategy
@@ -25,7 +27,7 @@ export async function deployWithVanity(
   }
 
   const shouldVerify = chainId !== 31337 && chainId !== 1337 && !skipVerification;
-  
+
   console.log(`📡 Network: ${network} - ChainId: ${chainId}`);
   console.log(`🔍 Contract verification: ${shouldVerify ? "ENABLED" : "DISABLED (local network)"}\n`);
 
@@ -60,86 +62,86 @@ export async function deployWithVanity(
   console.log(`DPS Deployer Balance: ${formatEther(initialDpsBalance)} ETH`);
   console.log(`DPR Deployer Balance: ${formatEther(initialDprBalance)} ETH`);
   console.log(`Owner Balance: ${formatEther(initialOwnerBalance)} ETH\n`);
-  
+
   // Get current gas price for royalty rate calculation
   const feeData = await hardhatRuntime.ethers.provider.getFeeData();
   const gasPrice = feeData.gasPrice || parseUnits("20", "gwei");
   console.log(`Current gas price: ${formatUnits(gasPrice, "gwei")} GWEI\n`);
 
-     /**
-    * Parse insufficient funds error and extract required amount
-    */
-   function parseInsufficientFundsError(error: any): bigint | null {
-     const errorMsg = error.message || error.toString();
-     console.log(`🔍 Parsing: ${errorMsg}`);
-     
-     // Explicit pattern matching for known formats
-     
-     // 1. Provider-specific format: "ProviderError: Sender doesn't have enough funds to send tx. The max upfront cost is: 17156179590000000 and the sender's balance is: 4265999968225256"
-     const providerPattern = /max upfront cost is: (\d+) and the sender's balance is: (\d+)/;
-     const providerMatch = errorMsg.match(providerPattern);
-     if (providerMatch) {
-       const maxUpfront = BigInt(providerMatch[1]);
-       const balance = BigInt(providerMatch[2]);
-       const needed = maxUpfront - balance;
-       console.log(`📊 Provider format - Max upfront: ${formatEther(maxUpfront)} ETH, Balance: ${formatEther(balance)} ETH, Needed: ${formatEther(needed)} ETH`);
-       return needed;
-     }
-     
-     // 2. Testnet format: "insufficient funds for gas * price + value: balance 0, tx cost 344209543464, overshot 344209543464"
-     const testnetPattern = /insufficient funds for gas \* price \+ value: balance (\d+), tx cost (\d+), overshot (\d+)/;
-     const testnetMatch = errorMsg.match(testnetPattern);
-     if (testnetMatch) {
-       const balance = BigInt(testnetMatch[1]);
-       const txCost = BigInt(testnetMatch[2]);
-       const overshot = BigInt(testnetMatch[3]);
-       console.log(`📊 Testnet format - Balance: ${formatEther(balance)} ETH, TX Cost: ${formatEther(txCost)} ETH, Overshot: ${formatEther(overshot)} ETH`);
-       return overshot; // The overshot amount is what we need
-     }
-     
-     // 3. Standard have/want format: "insufficient funds for gas * price + value: address 0x... have 12345 want 67890"
-     const standardPattern = /insufficient funds for gas \* price \+ value: address .* have (\d+) want (\d+)/;
-     const standardMatch = errorMsg.match(standardPattern);
-     if (standardMatch) {
-       const have = BigInt(standardMatch[1]);
-       const want = BigInt(standardMatch[2]);
-       const needed = want - have;
-       console.log(`📊 Standard format - Have: ${formatEther(have)} ETH, Want: ${formatEther(want)} ETH, Needed: ${formatEther(needed)} ETH`);
-       return needed;
-     }
-     
-     // Fallback: Generic patterns for other formats
-     console.log("🔄 No explicit pattern matched, trying fallback patterns...");
-     const fallbackPatterns = [
-       /insufficient funds: address .* have (\d+) want (\d+)/,
-       /insufficient funds for transfer: address .* have (\d+) want (\d+)/,
-       /insufficient funds.*?want (\d+)/,
-       /need (\d+) have (\d+)/
-     ];
+  /**
+ * Parse insufficient funds error and extract required amount
+ */
+  function parseInsufficientFundsError(error: any): bigint | null {
+    const errorMsg = error.message || error.toString();
+    console.log(`🔍 Parsing: ${errorMsg}`);
 
-     for (const pattern of fallbackPatterns) {
-       const match = errorMsg.match(pattern);
-       if (match) {
-         console.log(`📊 Fallback pattern matched with ${match.length - 1} capture groups`);
-         if (match.length >= 3) {
-           // Two numbers: typically have, want
-           const have = BigInt(match[1]);
-           const want = BigInt(match[2]);
-           const needed = want - have;
-           console.log(`📊 Fallback - Have: ${formatEther(have)} ETH, Want: ${formatEther(want)} ETH, Needed: ${formatEther(needed)} ETH`);
-           return needed;
-         } else if (match.length >= 2) {
-           // One number: assume it's the needed amount
-           const needed = BigInt(match[1]);
-           console.log(`📊 Fallback - Needed: ${formatEther(needed)} ETH`);
-           return needed;
-         }
-       }
-     }
-     
-     console.log("❌ Could not parse required amount from error");
-     return null;
-   }
+    // Explicit pattern matching for known formats
+
+    // 1. Provider-specific format: "ProviderError: Sender doesn't have enough funds to send tx. The max upfront cost is: 17156179590000000 and the sender's balance is: 4265999968225256"
+    const providerPattern = /max upfront cost is: (\d+) and the sender's balance is: (\d+)/;
+    const providerMatch = errorMsg.match(providerPattern);
+    if (providerMatch) {
+      const maxUpfront = BigInt(providerMatch[1]);
+      const balance = BigInt(providerMatch[2]);
+      const needed = maxUpfront - balance;
+      console.log(`📊 Provider format - Max upfront: ${formatEther(maxUpfront)} ETH, Balance: ${formatEther(balance)} ETH, Needed: ${formatEther(needed)} ETH`);
+      return needed;
+    }
+
+    // 2. Testnet format: "insufficient funds for gas * price + value: balance 0, tx cost 344209543464, overshot 344209543464"
+    const testnetPattern = /insufficient funds for gas \* price \+ value: balance (\d+), tx cost (\d+), overshot (\d+)/;
+    const testnetMatch = errorMsg.match(testnetPattern);
+    if (testnetMatch) {
+      const balance = BigInt(testnetMatch[1]);
+      const txCost = BigInt(testnetMatch[2]);
+      const overshot = BigInt(testnetMatch[3]);
+      console.log(`📊 Testnet format - Balance: ${formatEther(balance)} ETH, TX Cost: ${formatEther(txCost)} ETH, Overshot: ${formatEther(overshot)} ETH`);
+      return overshot; // The overshot amount is what we need
+    }
+
+    // 3. Standard have/want format: "insufficient funds for gas * price + value: address 0x... have 12345 want 67890"
+    const standardPattern = /insufficient funds for gas \* price \+ value: address .* have (\d+) want (\d+)/;
+    const standardMatch = errorMsg.match(standardPattern);
+    if (standardMatch) {
+      const have = BigInt(standardMatch[1]);
+      const want = BigInt(standardMatch[2]);
+      const needed = want - have;
+      console.log(`📊 Standard format - Have: ${formatEther(have)} ETH, Want: ${formatEther(want)} ETH, Needed: ${formatEther(needed)} ETH`);
+      return needed;
+    }
+
+    // Fallback: Generic patterns for other formats
+    console.log("🔄 No explicit pattern matched, trying fallback patterns...");
+    const fallbackPatterns = [
+      /insufficient funds: address .* have (\d+) want (\d+)/,
+      /insufficient funds for transfer: address .* have (\d+) want (\d+)/,
+      /insufficient funds.*?want (\d+)/,
+      /need (\d+) have (\d+)/
+    ];
+
+    for (const pattern of fallbackPatterns) {
+      const match = errorMsg.match(pattern);
+      if (match) {
+        console.log(`📊 Fallback pattern matched with ${match.length - 1} capture groups`);
+        if (match.length >= 3) {
+          // Two numbers: typically have, want
+          const have = BigInt(match[1]);
+          const want = BigInt(match[2]);
+          const needed = want - have;
+          console.log(`📊 Fallback - Have: ${formatEther(have)} ETH, Want: ${formatEther(want)} ETH, Needed: ${formatEther(needed)} ETH`);
+          return needed;
+        } else if (match.length >= 2) {
+          // One number: assume it's the needed amount
+          const needed = BigInt(match[1]);
+          console.log(`📊 Fallback - Needed: ${formatEther(needed)} ETH`);
+          return needed;
+        }
+      }
+    }
+
+    console.log("❌ Could not parse required amount from error");
+    return null;
+  }
 
   /**
    * Fund deployer with parsed amount plus buffer
@@ -147,12 +149,12 @@ export async function deployWithVanity(
   async function fundDeployer(deployerSigner: any, requiredAmount: bigint, deployerName: string): Promise<void> {
     // Add 10% buffer for safety
     const fundingAmount = (requiredAmount * 110n) / 100n;
-    
+
     console.log(`💰 Funding ${deployerName} deployer with ${formatEther(fundingAmount)} ETH (10% buffer)...`);
-    
+
     const ownerBalance = await hardhatRuntime.ethers.provider.getBalance(owner.address);
     if (ownerBalance < fundingAmount) {
-      throw new Error(`Owner has insufficient funds: need ${formatEther(fundingAmount)} ETH but only have ${formatEther(ownerBalance)} ETH`);
+      throw new Error(`Owner ${owner.address} has insufficient funds: need ${formatEther(fundingAmount)} ETH but only have ${formatEther(ownerBalance)} ETH`);
     }
 
     const fundingTx = await owner.sendTransaction({
@@ -162,7 +164,7 @@ export async function deployWithVanity(
 
     await fundingTx.wait();
     console.log(`✅ Successfully funded ${deployerName} deployer (tx: ${fundingTx.hash})`);
-    
+
     const newBalance = await hardhatRuntime.ethers.provider.getBalance(deployerSigner.address);
     console.log(`   New ${deployerName} deployer balance: ${formatEther(newBalance)} ETH\n`);
   }
@@ -177,22 +179,22 @@ export async function deployWithVanity(
     contractName: string
   ): Promise<T> {
     console.log(`🚀 Attempting to deploy ${contractName}...`);
-    
+
     try {
       // First attempt
       return await deployFunction();
     } catch (error: any) {
       console.log(`⚠️  ${contractName} deployment failed, checking if it's a funding issue...`);
-      
+
       const requiredAmount = parseInsufficientFundsError(error);
       if (!requiredAmount) {
         console.log("❌ Error is not related to insufficient funds, re-throwing...");
         throw error;
       }
-      
+
       console.log(`💸 Funding ${deployerName} deployer and retrying deployment...`);
       await fundDeployer(deployerSigner, requiredAmount, deployerName);
-      
+
       try {
         // Second attempt after funding
         console.log(`🔄 Retrying ${contractName} deployment...`);
@@ -217,27 +219,27 @@ export async function deployWithVanity(
     // Check for existing DPS deployment if nonce != 0
     if (dpsNonce !== 0) {
       console.log(`⚠️  DPS deployer nonce is ${dpsNonce}, checking for existing deployment...`);
-      
+
       // Calculate deterministic address for nonce 0
       const expectedDpsAddress = hardhatRuntime.ethers.getCreateAddress({
         from: dpsSigner.address,
         nonce: 0
       });
-      
+
       console.log(`Expected DPS address (nonce 0): ${expectedDpsAddress}`);
-      
+
       // Check if contract exists at the expected address
       const contractCode = await hardhatRuntime.ethers.provider.getCode(expectedDpsAddress);
       const contractExists = contractCode !== "0x";
-      
+
       if (contractExists) {
         console.log("✅ Found existing DPS contract at expected address, skipping deployment");
-        
+
         // Connect to existing contract
         const DataPointStorageFactory = await hardhatRuntime.ethers.getContractFactory("DataPointStorage");
         dataPointStorage = DataPointStorageFactory.attach(expectedDpsAddress) as DataPointStorage;
         dpsAddress = expectedDpsAddress;
-        
+
         // Verify it's actually a DPS contract
         try {
           const version = await dataPointStorage.VERSION();
@@ -253,7 +255,7 @@ export async function deployWithVanity(
 
     if (!skipDpsDeployment) {
       const DataPointStorageFactory = await hardhatRuntime.ethers.getContractFactory("DataPointStorage");
-      
+
       dataPointStorage = await deployWithRetry(
         dpsSigner,
         async () => {
@@ -264,7 +266,7 @@ export async function deployWithVanity(
         "DPS",
         "DataPointStorage"
       );
-      
+
       dpsAddress = await dataPointStorage.getAddress();
       console.log(`✅ DataPointStorage deployed to: ${dpsAddress}`);
       console.log(`   Deployed by: ${dpsSigner.address}`);
@@ -281,38 +283,40 @@ export async function deployWithVanity(
     // STEP 2: DPR Estimation and Deployment
     // ========================================
     console.log("📦 Step 2: DataPointRegistry (DPR) Deployment");
-    
+
     // Use custom royalty rate or default to 1/1000th of gas price
     const royaltyRate = customRoyaltyRate || gasPrice / 1000n;
     const royaltyRateGwei = hardhatRuntime.ethers.formatUnits(royaltyRate, "gwei");
-    
+
     console.log(`💰 Royalty rate: ${royaltyRateGwei} GWEI (${royaltyRate.toString()} wei)`);
-    
+
     const DataPointRegistryFactory = await hardhatRuntime.ethers.getContractFactory("DataPointRegistry");
-    
-         const dataPointRegistry = await deployWithRetry(
-       dprSigner,
-       async () => {
-         if (!dpsAddress) {
-           throw new Error("DPS address is required for DPR deployment");
-         }
-         const contract = await DataPointRegistryFactory.connect(dprSigner).deploy(
-           owner.address,     // Owner of the DPR contract
-           dpsAddress,        // Address of the DPS contract
-           royaltyRate        // Royalty rate
-         ) as DataPointRegistry;
-         await contract.waitForDeployment();
-         return contract;
-       },
-       "DPR",
-       "DataPointRegistry"
-     );
-    
+
+    const ownerAddress = process.env.TW3_COLD_ADDRESS || await owner.getAddress();
+
+    const dataPointRegistry = await deployWithRetry(
+      dprSigner,
+      async () => {
+        if (!dpsAddress) {
+          throw new Error("DPS address is required for DPR deployment");
+        }
+        const contract = await DataPointRegistryFactory.connect(dprSigner).deploy(
+          ownerAddress,     // Owner of the DPR contract
+          dpsAddress,        // Address of the DPS contract
+          royaltyRate        // Royalty rate
+        ) as DataPointRegistry;
+        await contract.waitForDeployment();
+        return contract;
+      },
+      "DPR",
+      "DataPointRegistry"
+    );
+
     const dprAddress = await dataPointRegistry.getAddress();
 
     console.log(`✅ DataPointRegistry deployed to: ${dprAddress}`);
     console.log(`   Deployed by: ${dprSigner.address}`);
-    console.log(`   Owner: ${owner.address}`);
+    console.log(`   Owner: ${ownerAddress}`);
     console.log(`   DPS Address: ${dpsAddress}`);
     console.log(`   Royalty Rate: ${royaltyRateGwei} GWEI\n`);
 
@@ -341,13 +345,13 @@ export async function deployWithVanity(
     // Contract verification using enhanced procedure with confirmation waiting
     if (shouldVerify && !skipVerification) {
       console.log("\n🔍 Starting enhanced contract verification procedure...");
-      
+
       try {
         // Use the enhanced deploy:verify task with confirmation waiting
         await hardhatRuntime.run("deploy:verify", {
           dps: dpsAddress,
           dpr: dprAddress,
-          owner: owner.address,
+          owner: ownerAddress,
           royalty: royaltyRate.toString(),
           confirmations: confirmations // Use the specified number of confirmations
         });
@@ -355,7 +359,7 @@ export async function deployWithVanity(
       } catch (error: any) {
         console.log("❌ Enhanced verification failed:", error.message);
         console.log("🔄 Falling back to direct verification without confirmation waiting...");
-        
+
         // Fallback to direct verification if the task fails
         try {
           // Verify DataPointStorage
@@ -401,7 +405,7 @@ export async function deployWithVanity(
     const finalDpsBalance = await hardhatRuntime.ethers.provider.getBalance(dpsSigner.address);
     const finalDprBalance = await hardhatRuntime.ethers.provider.getBalance(dprSigner.address);
     const finalOwnerBalance = await hardhatRuntime.ethers.provider.getBalance(owner.address);
-    
+
     const actualDpsCost = skipDpsDeployment ? 0n : (initialDpsBalance - finalDpsBalance);
     const actualDprCost = initialDprBalance - finalDprBalance;
     const ownerSpent = initialOwnerBalance - finalOwnerBalance;
@@ -412,7 +416,7 @@ export async function deployWithVanity(
     console.log(`Network:          ${network}`);
     console.log(`DataPointStorage: ${dpsAddress} ${skipDpsDeployment ? "(existing)" : "(deployed)"}`);
     console.log(`DataPointRegistry: ${dprAddress} (deployed)`);
-    console.log(`Owner:            ${owner.address}`);
+    console.log(`Owner:            ${ownerAddress}`);
     console.log(`Royalty Rate:     ${royaltyRateGwei} GWEI`);
     console.log(`\nDeployment costs:`);
     if (!skipDpsDeployment) {
@@ -435,7 +439,7 @@ export async function deployWithVanity(
     // STEP 4: Update Deployment Registry
     // ========================================
     console.log("\n📝 Updating deployment registry...");
-    
+
     try {
       const deploymentData = formatDeploymentData(
         chainId,
@@ -448,12 +452,12 @@ export async function deployWithVanity(
           address: dprAddress,
           deployerAddress: dprSigner.address,
           txHash: dataPointRegistry.deploymentTransaction()?.hash,
-          owner: owner.address,
+          owner: ownerAddress,
           dpsAddress: dpsAddress,
           royaltyRate: royaltyRate
         }
       );
-      
+
       await addDeployment(deploymentData);
       console.log(`🎯 Network '${network}' deployment registered successfully!`);
     } catch (error: any) {
@@ -462,7 +466,7 @@ export async function deployWithVanity(
       console.log(`   Network: ${network}`);
       console.log(`   DPS: ${dpsAddress}`);
       console.log(`   DPR: ${dprAddress}`);
-      console.log(`   Owner: ${owner.address}`);
+      console.log(`   Owner: ${ownerAddress}`);
       console.log(`   Royalty Rate: ${royaltyRate.toString()}`);
     }
 
@@ -473,7 +477,7 @@ export async function deployWithVanity(
       addresses: {
         dps: dpsAddress,
         dpr: dprAddress,
-        owner: owner.address
+        owner: ownerAddress
       },
       signers: {
         dpsSigner,

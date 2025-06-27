@@ -48,12 +48,22 @@ const user3Key = ethers.HDNodeWallet.fromPhrase(tw3Mnemonic, undefined, `m/44'/6
 
 // For hardhat network - with balance configuration
 const espDeployersHardhat = [
-  { privateKey: dpsKey, balance: "10000000000000000000000" },
-  { privateKey: dprKey, balance: "10000000000000000000000" },
+  { privateKey: dpsKey, balance: "0" },
+  { privateKey: dprKey, balance: "0" },
   { privateKey: tw3Key, balance: "10000000000000000000000" },
   { privateKey: user1Key, balance: "10000000000000000000000" },
   { privateKey: user2Key, balance: "10000000000000000000000" },
-  { privateKey: user3Key, balance: "10000000000000000000000" }
+  { privateKey: user3Key, balance: "10000000000000000000000" },
+  { privateKey: testKey, balance: "10000000000000000000000" },
+  { privateKey: testKey1, balance: "10000000000000000000000" },
+  { privateKey: testKey2, balance: "10000000000000000000000" },
+  { privateKey: testKey3, balance: "10000000000000000000000" },
+  { privateKey: testKey4, balance: "10000000000000000000000" },
+  { privateKey: testKey5, balance: "10000000000000000000000" },
+  { privateKey: testKey6, balance: "10000000000000000000000" },
+  { privateKey: testKey7, balance: "10000000000000000000000" },
+  { privateKey: testKey8, balance: "10000000000000000000000" },
+  { privateKey: testKey9, balance: "10000000000000000000000" },
 ];
 
 // For other networks - just private keys
@@ -96,7 +106,7 @@ const config: HardhatUserConfig = {
   solidity: "0.8.28",
   networks: {
     hardhat: {
-      accounts: testDeployerHardhat,
+      accounts: espDeployersHardhat,
     },
     localhost: {
       url: "http://127.0.0.1:8545",
